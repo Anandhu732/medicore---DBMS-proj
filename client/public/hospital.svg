@@ -1,0 +1,38 @@
+<!-- Hospital Icon SVG for Landing Page -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <!-- Building -->
+  <rect x="150" y="100" width="500" height="400" fill="#f8f9fa" stroke="#2563eb" stroke-width="3"/>
+
+  <!-- Windows -->
+  <rect x="200" y="150" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="290" y="150" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="380" y="150" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="470" y="150" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="560" y="150" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <rect x="200" y="240" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="290" y="240" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="380" y="240" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="470" y="240" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="560" y="240" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <rect x="200" y="330" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="290" y="330" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="470" y="330" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="560" y="330" width="60" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Door -->
+  <rect x="360" y="380" width="80" height="120" fill="#2563eb"/>
+  <circle cx="425" cy="440" r="5" fill="#ffffff"/>
+
+  <!-- Medical Cross -->
+  <rect x="375" y="160" width="50" height="15" fill="#ef4444"/>
+  <rect x="392.5" y="142.5" width="15" height="50" fill="#ef4444"/>
+
+  <!-- Roof -->
+  <polygon points="400,60 100,100 700,100" fill="#2563eb"/>
+
+  <!-- Emergency Sign -->
+  <rect x="320" y="420" width="30" height="8" fill="#ffffff" opacity="0.8"/>
+  <rect x="331" y="413" width="8" height="22" fill="#ffffff" opacity="0.8"/>
+</svg>

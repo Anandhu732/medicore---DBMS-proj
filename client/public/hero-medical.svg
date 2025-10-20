@@ -1,0 +1,45 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f8fafc"/>
+  
+  <!-- Hospital Building -->
+  <rect x="50" y="120" width="300" height="180" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  
+  <!-- Hospital Cross -->
+  <rect x="190" y="80" width="20" height="40" fill="#3b82f6"/>
+  <rect x="180" y="90" width="40" height="20" fill="#3b82f6"/>
+  
+  <!-- Windows -->
+  <rect x="80" y="150" width="30" height="40" fill="#3b82f6" opacity="0.3"/>
+  <rect x="130" y="150" width="30" height="40" fill="#3b82f6" opacity="0.3"/>
+  <rect x="240" y="150" width="30" height="40" fill="#3b82f6" opacity="0.3"/>
+  <rect x="290" y="150" width="30" height="40" fill="#3b82f6" opacity="0.3"/>
+  
+  <!-- Door -->
+  <rect x="185" y="220" width="30" height="80" fill="#6b7280"/>
+  
+  <!-- Medical Icons -->
+  <!-- Stethoscope -->
+  <circle cx="100" cy="60" r="8" fill="none" stroke="#10b981" stroke-width="3"/>
+  <path d="M108 60 Q120 80 140 60" stroke="#10b981" stroke-width="3" fill="none"/>
+  
+  <!-- Heart -->
+  <path d="M320 50 C320 40, 330 40, 330 50 C330 40, 340 40, 340 50 C340 60, 330 70, 320 50" fill="#ef4444"/>
+  
+  <!-- Plus Sign -->
+  <rect x="250" y="45" width="20" height="4" fill="#3b82f6"/>
+  <rect x="258" y="37" width="4" height="20" fill="#3b82f6"/>
+  
+  <!-- Medical Chart -->
+  <rect x="60" y="200" width="40" height="30" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="65" y="205" width="30" height="2" fill="#3b82f6"/>
+  <rect x="65" y="210" width="25" height="2" fill="#3b82f6"/>
+  <rect x="65" y="215" width="20" height="2" fill="#3b82f6"/>
+  
+  <!-- Pill Bottle -->
+  <rect x="300" y="200" width="20" height="30" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="302" y="202" width="16" height="4" fill="#3b82f6"/>
+  <circle cx="310" cy="220" r="3" fill="#10b981"/>
+  <circle cx="310" cy="225" r="3" fill="#10b981"/>
+</svg>
+

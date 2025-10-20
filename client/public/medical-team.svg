@@ -1,0 +1,56 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f8fafc"/>
+  
+  <!-- Doctor 1 -->
+  <circle cx="100" cy="80" r="25" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <rect x="75" y="105" width="50" height="80" fill="#3b82f6"/>
+  <rect x="85" y="120" width="30" height="50" fill="#ffffff"/>
+  <rect x="90" y="130" width="20" height="30" fill="#3b82f6"/>
+  
+  <!-- Stethoscope -->
+  <circle cx="100" cy="75" r="5" fill="none" stroke="#10b981" stroke-width="2"/>
+  <path d="M105 75 Q115 90 130 75" stroke="#10b981" stroke-width="2" fill="none"/>
+  
+  <!-- Doctor 2 -->
+  <circle cx="200" cy="80" r="25" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <rect x="175" y="105" width="50" height="80" fill="#10b981"/>
+  <rect x="185" y="120" width="30" height="50" fill="#ffffff"/>
+  <rect x="190" y="130" width="20" height="30" fill="#10b981"/>
+  
+  <!-- Medical Chart -->
+  <rect x="190" y="140" width="20" height="15" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="192" y="142" width="16" height="1" fill="#3b82f6"/>
+  <rect x="192" y="145" width="12" height="1" fill="#3b82f6"/>
+  <rect x="192" y="148" width="14" height="1" fill="#3b82f6"/>
+  
+  <!-- Nurse -->
+  <circle cx="300" cy="80" r="25" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <rect x="275" y="105" width="50" height="80" fill="#f59e0b"/>
+  <rect x="285" y="120" width="30" height="50" fill="#ffffff"/>
+  <rect x="290" y="130" width="20" height="30" fill="#f59e0b"/>
+  
+  <!-- Medical Cross -->
+  <rect x="295" y="75" width="10" height="20" fill="#ef4444"/>
+  <rect x="290" y="80" width="20" height="10" fill="#ef4444"/>
+  
+  <!-- Patient -->
+  <circle cx="150" cy="200" r="20" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <rect x="130" y="220" width="40" height="60" fill="#6b7280"/>
+  <rect x="140" y="230" width="20" height="40" fill="#ffffff"/>
+  
+  <!-- Heart Monitor -->
+  <rect x="250" y="200" width="80" height="40" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <path d="M260 220 Q270 210 280 220 Q290 230 300 220 Q310 210 320 220" stroke="#ef4444" stroke-width="2" fill="none"/>
+  
+  <!-- Medical Equipment -->
+  <rect x="50" y="200" width="30" height="20" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <circle cx="65" cy="210" r="3" fill="#3b82f6"/>
+  
+  <!-- Pill Bottle -->
+  <rect x="320" y="200" width="15" height="25" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="322" y="202" width="11" height="3" fill="#3b82f6"/>
+  <circle cx="327" cy="215" r="2" fill="#10b981"/>
+  <circle cx="327" cy="220" r="2" fill="#10b981"/>
+</svg>
+
