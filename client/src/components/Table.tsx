@@ -29,34 +29,34 @@ function Table<T extends Record<string, unknown>>({
 }: TableProps<T>) {
   const variantClasses = {
     default: 'pro-table',
-    striped: 'pro-table [&_tbody_tr:nth-child(even)]:bg-neutral-50',
-    bordered: 'pro-table border border-neutral-200',
+    striped: 'pro-table [&_tbody_tr:nth-child(even)]:bg-muted/50',
+    bordered: 'pro-table border border-border',
   };
 
   return (
-    <div className={`overflow-x-auto rounded-lg border border-neutral-200 ${className}`}>
+    <div className={`overflow-x-auto rounded-lg border border-gray-200 bg-white ${className}`}>
       <table className={`min-w-full ${variantClasses[variant]}`}>
-        <thead className="bg-neutral-50 border-b-2 border-neutral-200">
+        <thead className="bg-gray-50 border-b-2 border-gray-200">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider"
+                className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-neutral-200">
+        <tbody className="bg-white divide-y divide-gray-200">
           {data.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-6 py-16 text-center text-neutral-500 font-medium"
+                className="px-6 py-16 text-center text-gray-500 font-medium"
               >
                 <div className="flex flex-col items-center gap-3">
-                  <svg className="w-12 h-12 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   {emptyMessage}
@@ -69,7 +69,7 @@ function Table<T extends Record<string, unknown>>({
                 key={rowIndex}
                 onClick={() => onRowClick?.(row)}
                 className={`
-                  ${hoverable ? 'hover:bg-neutral-50' : ''}
+                  ${hoverable ? 'hover:bg-gray-50' : ''}
                   ${onRowClick ? 'cursor-pointer' : ''}
                   transition-colors duration-150
                 `}
@@ -77,7 +77,7 @@ function Table<T extends Record<string, unknown>>({
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-black font-medium"
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium"
                   >
                     {column.render
                       ? column.render(row[column.key] as T[keyof T], row)

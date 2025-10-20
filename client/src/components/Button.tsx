@@ -18,21 +18,21 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseClasses = 'pro-button inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
 
   const variantClasses = {
-    primary: 'pro-button-primary bg-black text-white hover:bg-neutral-800 focus:ring-neutral-500',
-    secondary: 'pro-button-secondary bg-neutral-600 text-white hover:bg-neutral-700 focus:ring-neutral-500',
-    accent: 'pro-button-accent bg-accent-600 text-white hover:bg-accent-700 focus:ring-accent-500',
-    danger: 'bg-error-600 text-white hover:bg-error-700 focus:ring-error-500',
-    success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500',
-    outline: 'pro-button-outline bg-transparent text-black border-2 border-neutral-300 hover:bg-neutral-50 focus:ring-neutral-500',
+    primary: 'bg-black text-white hover:bg-blue-700 focus:ring-blue-500',
+    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
+    accent: 'bg-blue-100 text-blue-800 hover:bg-blue-200 focus:ring-blue-500',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
+    outline: 'bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500',
   };
 
   const sizeClasses = {
-    sm: 'pro-button-sm px-4 py-2 text-sm',
-    md: 'pro-button-md px-6 py-3 text-base',
-    lg: 'pro-button-lg px-8 py-4 text-lg',
+    sm: 'px-4 py-2 text-sm',
+    md: 'px-6 py-3 text-base',
+    lg: 'px-8 py-4 text-lg',
   };
 
   return (

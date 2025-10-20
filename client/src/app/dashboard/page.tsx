@@ -86,7 +86,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <Layout userRole={user.role} userName={user.name}>
+    <Layout>
       <div className="space-y-8">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-accent-50 to-primary-50 rounded-2xl p-8 border border-accent-200">
@@ -207,7 +207,7 @@ export default function DashboardPage() {
         <Card title="Quick Actions" variant="elevated">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <button
-              onClick={() => router.push('/patients?action=add')}
+              onClick={() => router.push('/add-patient')}
               className="group flex flex-col items-center justify-center p-8 bg-accent-50 hover:bg-accent-100 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-105 border border-accent-200"
             >
               <div className="w-16 h-16 bg-accent-100 group-hover:bg-accent-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
@@ -219,7 +219,7 @@ export default function DashboardPage() {
             </button>
 
             <button
-              onClick={() => router.push('/appointments?action=schedule')}
+              onClick={() => router.push('/schedule-appointment')}
               className="group flex flex-col items-center justify-center p-8 bg-success-50 hover:bg-success-100 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-105 border border-success-200"
             >
               <div className="w-16 h-16 bg-success-100 group-hover:bg-success-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
@@ -231,7 +231,7 @@ export default function DashboardPage() {
             </button>
 
             <button
-              onClick={() => router.push('/medical-records?action=add')}
+              onClick={() => router.push('/add-medical-record')}
               className="group flex flex-col items-center justify-center p-8 bg-warning-50 hover:bg-warning-100 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-105 border border-warning-200"
             >
               <div className="w-16 h-16 bg-warning-100 group-hover:bg-warning-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
@@ -243,7 +243,7 @@ export default function DashboardPage() {
             </button>
 
             <button
-              onClick={() => router.push('/billing?action=create')}
+              onClick={() => router.push('/create-invoice')}
               className="group flex flex-col items-center justify-center p-8 bg-primary-50 hover:bg-primary-100 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-105 border border-primary-200"
             >
               <div className="w-16 h-16 bg-primary-100 group-hover:bg-primary-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">

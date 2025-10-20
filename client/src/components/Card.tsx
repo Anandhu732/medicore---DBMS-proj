@@ -20,25 +20,27 @@ const Card: React.FC<CardProps> = ({
   variant = 'default',
 }) => {
   const variantClasses = {
-    default: 'pro-card bg-white border border-neutral-200',
-    elevated: 'pro-card bg-white border border-neutral-200 shadow-lg',
-    outlined: 'pro-card bg-white border-2 border-neutral-300',
+    default: 'bg-white border border-gray-200 rounded-lg shadow-sm',
+    elevated: 'bg-white border border-gray-200 rounded-lg shadow-lg',
+    outlined: 'bg-white border-2 border-gray-300 rounded-lg shadow-sm',
   };
 
   return (
     <div className={`${variantClasses[variant]} ${className}`}>
       {(title || action) && (
-        <div className="pro-card-header flex items-center justify-between">
-          <div>
-            {title && <h3 className="text-lg font-semibold text-black">{title}</h3>}
-            {subtitle && <p className="text-sm text-neutral-600 mt-1">{subtitle}</p>}
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
+              {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+            </div>
+            {action && <div>{action}</div>}
           </div>
-          {action && <div>{action}</div>}
         </div>
       )}
-      <div className="pro-card-body">{children}</div>
+      <div className="px-6 py-4">{children}</div>
       {footer && (
-        <div className="pro-card-footer">
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
           {footer}
         </div>
       )}

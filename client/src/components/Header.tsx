@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ userName, userRole }) => {
   };
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-background border-b border-border z-40">
+    <header className="fixed top-0 left-64 right-0 h-16 bg-white border-b border-border z-40">
       <div className="h-full px-6 flex items-center justify-between">
         {/* Search Bar */}
         <div className="flex-1 max-w-xl">
@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ userName, userRole }) => {
             <input
               type="text"
               placeholder="Search patients, appointments..."
-              className="w-full px-4 py-2 pl-10 pr-4 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+              className="w-full px-4 py-2 pl-10 pr-4 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white text-foreground"
               aria-label="Search"
             />
             <svg
@@ -99,10 +99,10 @@ const Header: React.FC<HeaderProps> = ({ userName, userRole }) => {
 
             {/* Dropdown Menu */}
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border py-1">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-border py-1">
                 <button
                   onClick={() => router.push('/profile')}
-                  className="w-full text-left px-4 py-2 text-sm text-card-foreground hover:bg-muted flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -116,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({ userName, userRole }) => {
                 </button>
                 <button
                   onClick={() => router.push('/settings')}
-                  className="w-full text-left px-4 py-2 text-sm text-card-foreground hover:bg-muted flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -137,7 +137,7 @@ const Header: React.FC<HeaderProps> = ({ userName, userRole }) => {
                 <hr className="my-1 border-border" />
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2 transition-colors bg-white"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path

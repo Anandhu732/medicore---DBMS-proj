@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import { isValidEmail } from '@/utils/helpers';
+import { api } from '@/utils/api';
 
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'doctor',
+    role: 'doctor', // Default role
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -43,20 +44,45 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      // Mock successful login
-      const user = {
-        id: '1',
-        name: formData.email.split('@')[0],
-        email: formData.email,
-        role: formData.role,
+    try {
+      // Call the actual API for authentication
+      const response = await api.auth.login(formData.email, formData.password);
+
+      // Check if the user's role matches the selected role
+      if (response.user.role !== formData.role) {
+        setErrors({
+          general: `This email is registered as ${response.user.role}, not ${formData.role}. Please select the correct role.`
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Store user data with token in localStorage
+      const userData = {
+        ...response.user,
+        token: response.token,
       };
 
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(userData));
       setLoading(false);
-      router.push('/dashboard');
-    }, 1500);
+
+      // Redirect based on role
+      if (response.user.role === 'admin') {
+        router.push('/dashboard'); // Admin can access all features
+      } else if (response.user.role === 'doctor') {
+        router.push('/dashboard'); // Doctor dashboard
+      } else if (response.user.role === 'receptionist') {
+        router.push('/dashboard'); // Receptionist dashboard
+      } else {
+        router.push('/dashboard'); // Default fallback
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setErrors({
+        general: error.message || 'Login failed. Please check your credentials.'
+      });
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,7 +91,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
               <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
@@ -109,8 +135,9 @@ export default function LoginPage() {
               }
             />
 
+            {/* Role Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Role
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -134,12 +161,18 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <label className="flex items-center">
                 <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                 <span className="ml-2 text-sm text-gray-700">Remember me</span>
               </label>
-              <Link href="#" className="text-sm text-blue-600 hover:text-blue-700">
+              <Link href="#" className="text-sm text-black hover:text-blue-700">
                 Forgot password?
               </Link>
             </div>
@@ -152,7 +185,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link href="/register" className="text-black hover:text-blue-700 font-medium">
                 Register now
               </Link>
             </p>
@@ -162,11 +195,23 @@ export default function LoginPage() {
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm text-blue-900 font-medium mb-2">Demo Credentials:</p>
-          <ul className="text-xs text-blue-800 space-y-1">
-            <li>• Admin: admin@medicore.com / password</li>
-            <li>• Doctor: doctor@medicore.com / password</li>
-            <li>• Receptionist: receptionist@medicore.com / password</li>
-          </ul>
+          <div className="text-xs text-blue-800 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">Admin</span>
+              <span>admin@medicore.com / password</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">Doctor</span>
+              <span>sarah.johnson@medicore.com / password</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">Receptionist</span>
+              <span>emily.davis@medicore.com / password</span>
+            </div>
+          </div>
+          <p className="text-xs text-blue-700 mt-2">
+              Select the correct role button above before logging in
+          </p>
         </div>
       </div>
     </div>

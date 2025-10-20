@@ -21,9 +21,9 @@ const Select: React.FC<SelectProps> = ({
   const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
 
   const variantClasses = {
-    default: 'pro-input',
-    filled: 'pro-input bg-muted border-muted',
-    outlined: 'pro-input border-2 border-border',
+    default: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white',
+    filled: 'w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+    outlined: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white',
   };
 
   return (
@@ -31,7 +31,7 @@ const Select: React.FC<SelectProps> = ({
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-sm font-semibold text-foreground mb-2"
+          className="block text-sm font-semibold text-gray-700 mb-2"
         >
           {label}
         </label>
@@ -40,7 +40,7 @@ const Select: React.FC<SelectProps> = ({
         id={selectId}
         className={`
           ${variantClasses[variant]}
-          ${error ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}
+          ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}
           ${className}
         `}
         aria-invalid={error ? 'true' : 'false'}
@@ -54,7 +54,7 @@ const Select: React.FC<SelectProps> = ({
         ))}
       </select>
       {error && (
-        <p id={`${selectId}-error`} className="mt-2 text-sm text-destructive font-medium" role="alert">
+        <p id={`${selectId}-error`} className="mt-2 text-sm text-red-600 font-medium" role="alert">
           {error}
         </p>
       )}

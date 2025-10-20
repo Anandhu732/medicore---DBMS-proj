@@ -25,6 +25,13 @@ export default function MedicalRecordsPage() {
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    patientId: '',
+    diagnosis: '',
+    symptoms: '',
+    notes: '',
+    prescriptions: [] as any[],
+  });
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -61,15 +68,48 @@ export default function MedicalRecordsPage() {
     setIsDetailModalOpen(true);
   };
 
+  const handleAddRecord = () => {
+    setFormData({
+      patientId: '',
+      diagnosis: '',
+      symptoms: '',
+      notes: '',
+      prescriptions: [],
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // TODO: Replace with actual API call
+    const patient = mockPatients.find(p => p.id === formData.patientId);
+    const doctorUser = user; // Current logged-in user
+
+    const newRecord: MedicalRecord = {
+      id: `MR${(records.length + 1).toString().padStart(3, '0')}`,
+      patientId: formData.patientId,
+      patientName: patient?.name || 'Unknown',
+      doctorId: doctorUser?.id || 'D001',
+      doctorName: doctorUser?.name || 'Dr. Unknown',
+      date: new Date().toISOString().split('T')[0],
+      diagnosis: formData.diagnosis,
+      symptoms: formData.symptoms.split(',').map(s => s.trim()).filter(s => s),
+      prescriptions: formData.prescriptions,
+      notes: formData.notes,
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      updatedBy: doctorUser?.id || 'D001',
+      attachments: [], // Initialize empty attachments array
+    };
+
+    setRecords([newRecord, ...records]);
+    showToast('Medical record created successfully', 'success');
+    setIsAddModalOpen(false);
+  };
+
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="spinner mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return null; // Layout handles loading state
   }
 
   const columns = [
@@ -126,7 +166,7 @@ export default function MedicalRecordsPage() {
   ];
 
   return (
-    <Layout userRole={user.role} userName={user.name}>
+    <Layout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
@@ -134,7 +174,7 @@ export default function MedicalRecordsPage() {
             <p className="text-gray-600 mt-1">Manage patient medical history and records</p>
           </div>
           <Button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => router.push('/add-medical-record')}
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -348,17 +388,63 @@ export default function MedicalRecordsPage() {
           onClose={() => setIsAddModalOpen(false)}
           title="Add New Medical Record"
           size="xl"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit}>
+                Create Record
+              </Button>
+            </>
+          }
         >
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Select
+              label="Patient"
+              value={formData.patientId}
+              onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+              options={[
+                { value: '', label: 'Select Patient' },
+                ...mockPatients.filter(p => p.status === 'Active').map(p => ({
+                  value: p.id,
+                  label: `${p.name} (${p.id}) - Age: ${p.age}`
+                }))
+              ]}
+              required
+            />
+
+            <Textarea
+              label="Diagnosis"
+              value={formData.diagnosis}
+              onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
+              placeholder="Enter the diagnosis..."
+              required
+              rows={3}
+            />
+
+            <Textarea
+              label="Symptoms (comma separated)"
+              value={formData.symptoms}
+              onChange={(e) => setFormData({ ...formData, symptoms: e.target.value })}
+              placeholder="e.g., Fever, Headache, Nausea, Fatigue"
+              rows={2}
+            />
+
+            <Textarea
+              label="Doctor's Notes"
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Additional observations, treatment plan, follow-up instructions..."
+              rows={4}
+            />
+
+            <div className="bg-accent-50 border border-accent-200 rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-2">
+                <strong>Note:</strong> Prescription and lab result details can be added after creating the record.
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Medical Record Form</h3>
-            <p className="text-gray-600">Full form implementation coming soon!</p>
-            <p className="text-sm text-gray-500 mt-4">This will include fields for diagnosis, symptoms, prescriptions, lab results, and file uploads.</p>
-          </div>
+          </form>
         </Modal>
       </div>
     </Layout>

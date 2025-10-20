@@ -74,16 +74,16 @@ const Modal: React.FC<ModalProps> = ({
 
         {/* Modal panel */}
         <div
-          className={`inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full ${sizeClasses[size]} ${variantClasses[variant]}`}
+          className={`inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full border border-gray-200 ${sizeClasses[size]} ${variantClasses[variant]}`}
         >
           {/* Header */}
-          <div className="bg-white px-8 py-6 border-b border-neutral-200 flex items-center justify-between">
-            <h3 id="modal-title" className="text-xl font-bold text-black">
+          <div className="bg-white px-8 py-6 border-b border-gray-200 flex items-center justify-between">
+            <h3 id="modal-title" className="text-xl font-bold text-gray-900">
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg p-2 transition-colors"
+              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-2 transition-colors"
               aria-label="Close modal"
             >
               <svg
@@ -103,13 +103,13 @@ const Modal: React.FC<ModalProps> = ({
           </div>
 
           {/* Body */}
-          <div className="bg-white px-8 py-6 max-h-[60vh] overflow-y-auto">
+          <div className="bg-white px-8 py-6 max-h-[60vh] overflow-y-auto text-gray-900">
             {children}
           </div>
 
           {/* Footer */}
           {footer && (
-            <div className="bg-neutral-50 px-8 py-6 border-t border-neutral-200 flex items-center justify-end gap-3">
+            <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex items-center justify-end gap-3">
               {footer}
             </div>
           )}

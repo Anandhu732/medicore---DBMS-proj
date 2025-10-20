@@ -89,19 +89,29 @@ export interface Invoice {
   date: string;
   dueDate: string;
   items: InvoiceItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  status: 'Paid' | 'Pending' | 'Overdue';
+  totalAmount: number;
+  paidAmount: number;
+  status: 'paid' | 'pending' | 'overdue';
   paymentMethod?: string;
   paidAt?: string;
+  notes?: string;
+  payments?: Payment[];
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  method: string;
+  date: string;
+  transactionId: string;
 }
 
 export interface InvoiceItem {
   id: string;
   description: string;
+  category: string;
   quantity: number;
-  unitPrice: number;
+  price: number;
   total: number;
 }
 
