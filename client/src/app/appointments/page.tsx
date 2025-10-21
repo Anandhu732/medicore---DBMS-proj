@@ -403,7 +403,7 @@ export default function AppointmentsPage() {
               </div>
               <Select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={(value) => setFilterStatus(value)}
                 options={[
                   { value: 'all', label: 'All Status' },
                   { value: 'Scheduled', label: 'Scheduled' },
@@ -471,7 +471,7 @@ export default function AppointmentsPage() {
               <Select
                 label="Patient"
                 value={formData.patientId}
-                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, patientId: value })}
                 options={[
                   { value: '', label: 'Select Patient' },
                   ...availablePatients.map(p => ({
@@ -484,7 +484,7 @@ export default function AppointmentsPage() {
               <Select
                 label="Doctor"
                 value={formData.doctorId}
-                onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, doctorId: value })}
                 options={[
                   { value: '', label: 'Select Doctor' },
                   ...availableDoctors.map(d => ({
@@ -515,7 +515,7 @@ export default function AppointmentsPage() {
               <Select
                 label="Duration"
                 value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, duration: value })}
                 options={[
                   { value: '15', label: '15 minutes' },
                   { value: '30', label: '30 minutes' },

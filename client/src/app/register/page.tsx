@@ -146,7 +146,7 @@ export default function RegisterPage() {
               label="Role"
               id="role"
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, role: value })}
               options={[
                 { value: 'receptionist', label: 'Receptionist' },
                 { value: 'doctor', label: 'Doctor' },

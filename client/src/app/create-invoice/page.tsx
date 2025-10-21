@@ -10,7 +10,6 @@ import Select from '@/components/Select';
 import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
-import { mockPatients } from '@/utils/mockData';
 import { formatCurrency } from '@/utils/helpers';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PERMISSIONS } from '@/utils/constants';
@@ -49,7 +48,11 @@ export default function CreateInvoicePage() {
 
   const loadInitialData = async () => {
     try {
-      const patients = mockPatients.filter(p => p.status === 'Active');
+      setIsLoading(true);
+
+      // Fetch real patients from API
+      const patientsData = await api.patients.getAll({ status: 'Active', limit: 100 });
+      const patients = Array.isArray(patientsData) ? patientsData : [];
       setAvailablePatients(patients);
 
       // Set default due date to 30 days from now
@@ -59,8 +62,12 @@ export default function CreateInvoicePage() {
         ...prev,
         dueDate: dueDate.toISOString().split('T')[0]
       }));
+
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading initial data:', error);
+      showToast('Failed to load patients', 'error');
+      setIsLoading(false);
     }
   };
 

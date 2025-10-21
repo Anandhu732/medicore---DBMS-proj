@@ -300,7 +300,7 @@ export default function PatientsPage() {
               </div>
               <Select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={(value) => setFilterStatus(value)}
                 options={[
                   { value: 'all', label: 'All Status' },
                   { value: 'Active', label: 'Active' },
@@ -366,7 +366,7 @@ export default function PatientsPage() {
               <Select
                 label="Gender"
                 value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, gender: value })}
                 options={[
                   { value: 'Male', label: 'Male' },
                   { value: 'Female', label: 'Female' },
@@ -376,7 +376,7 @@ export default function PatientsPage() {
               <Select
                 label="Blood Group"
                 value={formData.bloodGroup}
-                onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, bloodGroup: value })}
                 options={BLOOD_GROUPS.map(bg => ({ value: bg, label: bg }))}
               />
             </div>

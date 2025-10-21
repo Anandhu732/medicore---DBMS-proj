@@ -18,7 +18,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
   },
-  
+
   // Patients
   PATIENTS: {
     BASE: '/patients',
@@ -26,7 +26,7 @@ export const API_ENDPOINTS = {
     ARCHIVE: (id: string) => `/patients/${id}/archive`,
     RESTORE: (id: string) => `/patients/${id}/restore`,
   },
-  
+
   // Appointments
   APPOINTMENTS: {
     BASE: '/appointments',
@@ -34,21 +34,21 @@ export const API_ENDPOINTS = {
     CANCEL: (id: string) => `/appointments/${id}/cancel`,
     COMPLETE: (id: string) => `/appointments/${id}/complete`,
   },
-  
+
   // Medical Records
   MEDICAL_RECORDS: {
     BASE: '/medical-records',
     BY_ID: (id: string) => `/medical-records/${id}`,
     BY_PATIENT: (patientId: string) => `/medical-records/patient/${patientId}`,
   },
-  
+
   // Billing
   INVOICES: {
     BASE: '/invoices',
     BY_ID: (id: string) => `/invoices/${id}`,
     PAY: (id: string) => `/invoices/${id}/pay`,
   },
-  
+
   // Dashboard
   DASHBOARD: {
     STATS: '/dashboard/stats',
@@ -110,25 +110,36 @@ class ApiClient {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       let errorMessage = response.statusText;
-      
+      let errorDetails = null;
+
       try {
         const error = await response.json();
         errorMessage = error.message || error.error || response.statusText;
+        errorDetails = error;
       } catch {
         // If JSON parsing fails, use status text
         errorMessage = response.statusText;
       }
-      
+
+      // Log detailed error information for debugging
+      console.error('API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url,
+        message: errorMessage,
+        details: errorDetails
+      });
+
       throw new Error(errorMessage);
     }
 
     const result = await response.json();
-    
+
     // Handle backend response format: { success: true, data: [...], pagination: {...} }
     if (result.success && result.data !== undefined) {
       return result.data;
     }
-    
+
     return result;
   }
 
@@ -300,6 +311,14 @@ export const api = {
       apiClient.get(API_ENDPOINTS.DASHBOARD.STATS),
     getActivities: () =>
       apiClient.get(API_ENDPOINTS.DASHBOARD.RECENT_ACTIVITIES),
+  },
+
+  // Admin/Users
+  users: {
+    getAll: (params?: any) =>
+      apiClient.get('/admin/users' + (params ? `?${new URLSearchParams(params)}` : '')),
+    getById: (id: string) =>
+      apiClient.get(`/admin/users/${id}`),
   },
 };
 

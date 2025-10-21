@@ -265,7 +265,7 @@ export default function SettingsPage() {
               <Select
                 label="Theme"
                 value={settings.theme}
-                onChange={(e) => handleSelectChange('theme', e.target.value)}
+                onChange={(value) => handleSelectChange('theme', value)}
                 options={[
                   { value: 'light', label: 'Light' },
                   { value: 'dark', label: 'Dark' },
@@ -276,7 +276,7 @@ export default function SettingsPage() {
               <Select
                 label="Language"
                 value={settings.language}
-                onChange={(e) => handleSelectChange('language', e.target.value)}
+                onChange={(value) => handleSelectChange('language', value)}
                 options={[
                   { value: 'en', label: 'English' },
                   { value: 'es', label: 'Spanish' },
@@ -288,7 +288,7 @@ export default function SettingsPage() {
               <Select
                 label="Timezone"
                 value={settings.timezone}
-                onChange={(e) => handleSelectChange('timezone', e.target.value)}
+                onChange={(value) => handleSelectChange('timezone', value)}
                 options={[
                   { value: 'UTC', label: 'UTC' },
                   { value: 'EST', label: 'Eastern Time' },
@@ -300,7 +300,7 @@ export default function SettingsPage() {
               <Select
                 label="Date Format"
                 value={settings.dateFormat}
-                onChange={(e) => handleSelectChange('dateFormat', e.target.value)}
+                onChange={(value) => handleSelectChange('dateFormat', value)}
                 options={[
                   { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
                   { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },

@@ -10,7 +10,6 @@ import Select from '@/components/Select';
 import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
-import { mockPatients, mockUsers } from '@/utils/mockData';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PERMISSIONS } from '@/utils/constants';
 
@@ -52,13 +51,25 @@ export default function AddMedicalRecordPage() {
 
   const loadInitialData = async () => {
     try {
-      const patients = mockPatients.filter(p => p.status === 'Active');
-      const doctors = mockUsers.filter(u => u.role === 'doctor');
+      setIsLoading(true);
+
+      // Fetch real patients from API
+      const patientsData = await api.patients.getAll({ status: 'Active', limit: 100 });
+      const patients = Array.isArray(patientsData) ? patientsData : [];
+
+      // Fetch real doctors from API
+      const usersData = await api.users.getAll({ limit: 100 });
+      const users = Array.isArray(usersData) ? usersData : [];
+      const doctors = users.filter((u: any) => u.role === 'doctor');
 
       setAvailablePatients(patients);
       setAvailableDoctors(doctors);
+
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading initial data:', error);
+      showToast('Failed to load patients and doctors', 'error');
+      setIsLoading(false);
     }
   };
 
@@ -158,7 +169,7 @@ export default function AddMedicalRecordPage() {
       const labResultsPayload = formData.labResults.map(l => ({
         testName: l.test,
         value: l.result,
-        unit: '', // Optional field
+        unit: 'N/A', // Required by database, using default value
         normalRange: l.normalRange,
         status: l.status
       }));

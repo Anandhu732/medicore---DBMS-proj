@@ -10,9 +10,6 @@ import Select from '@/components/Select';
 import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
-import { mockPatients, mockUsers } from '@/utils/mockData';
-import { APPOINTMENT_STATUS, DEPARTMENTS } from '@/utils/constants';
-import { checkTimeConflict } from '@/utils/helpers';
 
 export default function ScheduleAppointmentPage() {
   const router = useRouter();
@@ -43,14 +40,25 @@ export default function ScheduleAppointmentPage() {
 
   const loadInitialData = async () => {
     try {
-      // Load patients and doctors
-      const patients = mockPatients.filter(p => p.status === 'Active');
-      const doctors = mockUsers.filter(u => u.role === 'doctor');
+      setIsLoading(true);
+
+      // Fetch real patients from API
+      const patientsData = await api.patients.getAll({ status: 'Active', limit: 100 });
+      const patients = Array.isArray(patientsData) ? patientsData : [];
+
+      // Fetch real doctors from API
+      const usersData = await api.users.getAll({ limit: 100 });
+      const users = Array.isArray(usersData) ? usersData : [];
+      const doctors = users.filter((u: any) => u.role === 'doctor');
 
       setAvailablePatients(patients);
       setAvailableDoctors(doctors);
+
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading initial data:', error);
+      showToast('Failed to load patients and doctors', 'error');
+      setIsLoading(false);
     }
   };
 

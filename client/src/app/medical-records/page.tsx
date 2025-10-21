@@ -11,23 +11,25 @@ import Input from '@/components/Input';
 import Select from '@/components/Select';
 import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
-import { mockMedicalRecords, mockPatients, mockUsers } from '@/utils/mockData';
 import { MedicalRecord } from '@/utils/types';
 import { formatDate, formatDateTime } from '@/utils/helpers';
 import { can } from '@/utils/permissions';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PERMISSIONS } from '@/utils/constants';
+import { api } from '@/utils/api';
 
 export default function MedicalRecordsPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [user, setUser] = useState<any>(null);
-  const [records, setRecords] = useState<MedicalRecord[]>(mockMedicalRecords);
-  const [filteredRecords, setFilteredRecords] = useState<MedicalRecord[]>(mockMedicalRecords);
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [filteredRecords, setFilteredRecords] = useState<MedicalRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [availablePatients, setAvailablePatients] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     patientId: '',
     diagnosis: '',
@@ -36,6 +38,38 @@ export default function MedicalRecordsPage() {
     prescriptions: [] as any[],
   });
 
+  // Load medical records from API
+  const loadMedicalRecords = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Fetching medical records from API...');
+      const data = await api.medicalRecords.getAll();
+      console.log('Medical records data received:', data);
+      const recordsArray = Array.isArray(data) ? data : [];
+      setRecords(recordsArray);
+      setFilteredRecords(recordsArray);
+      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Error loading medical records:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      showToast(error.message || 'Failed to load medical records', 'error');
+      setIsLoading(false);
+    }
+  };
+
+  // Load patients from API
+  const loadPatients = async () => {
+    try {
+      const data = await api.patients.getAll({ status: 'Active', limit: 100 });
+      const patientsArray = Array.isArray(data) ? data : [];
+      setAvailablePatients(patientsArray);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+      showToast('Failed to load patients', 'error');
+    }
+  };
+
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (!userData) {
@@ -43,6 +77,8 @@ export default function MedicalRecordsPage() {
     } else {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      loadMedicalRecords();
+      loadPatients();
     }
   }, [router]);
 
@@ -77,33 +113,62 @@ export default function MedicalRecordsPage() {
     setIsAddModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // TODO: Replace with actual API call
-    const patient = mockPatients.find(p => p.id === formData.patientId);
-    const doctorUser = user; // Current logged-in user
+    if (!formData.patientId) {
+      showToast('Please select a patient', 'error');
+      return;
+    }
 
-    const newRecord: MedicalRecord = {
-      id: `MR${(records.length + 1).toString().padStart(3, '0')}`,
-      patientId: formData.patientId,
-      patientName: patient?.name || 'Unknown',
-      doctorId: doctorUser?.id || 'D001',
-      doctorName: doctorUser?.name || 'Dr. Unknown',
-      date: new Date().toISOString().split('T')[0],
-      diagnosis: formData.diagnosis,
-      symptoms: formData.symptoms.split(',').map(s => s.trim()).filter(s => s),
-      prescriptions: formData.prescriptions,
-      notes: formData.notes,
-      version: 1,
-      updatedAt: new Date().toISOString(),
-      updatedBy: doctorUser?.id || 'D001',
-      attachments: [], // Initialize empty attachments array
-    };
+    if (!formData.diagnosis.trim()) {
+      showToast('Please enter a diagnosis', 'error');
+      return;
+    }
 
-    setRecords([newRecord, ...records]);
-    showToast('Medical record created successfully', 'success');
-    setIsAddModalOpen(false);
+    try {
+      setIsLoading(true);
+
+      // Find patient details
+      const patient = availablePatients.find(p => p.id === formData.patientId);
+
+      // Prepare medical record data
+      const recordData = {
+        patientId: formData.patientId,
+        patientName: patient?.name || 'Unknown',
+        doctorId: user?.id,
+        doctorName: user?.name,
+        date: new Date().toISOString().split('T')[0],
+        diagnosis: formData.diagnosis.trim(),
+        symptoms: formData.symptoms ? formData.symptoms.split(',').map(s => s.trim()).filter(s => s) : [],
+        notes: formData.notes.trim(),
+        prescriptions: formData.prescriptions || [],
+        labResults: [],
+      };
+
+      // Create medical record via API
+      await api.medicalRecords.create(recordData);
+
+      showToast('Medical record created successfully', 'success');
+      setIsAddModalOpen(false);
+
+      // Reset form
+      setFormData({
+        patientId: '',
+        diagnosis: '',
+        symptoms: '',
+        notes: '',
+        prescriptions: [],
+      });
+
+      // Reload records
+      await loadMedicalRecords();
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error creating medical record:', error);
+      showToast('Failed to create medical record', 'error');
+      setIsLoading(false);
+    }
   };
 
   if (!user) {
@@ -204,12 +269,18 @@ export default function MedicalRecordsPage() {
           title="Medical Records"
           subtitle={`${filteredRecords.length} record${filteredRecords.length !== 1 ? 's' : ''} found`}
         >
-          <Table
-            columns={columns}
-            data={filteredRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
-            onRowClick={viewRecordDetails}
-            emptyMessage="No medical records found"
-          />
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              data={filteredRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
+              onRowClick={viewRecordDetails}
+              emptyMessage="No medical records found"
+            />
+          )}
         </Card>
 
         {/* Detail Modal */}
@@ -404,10 +475,10 @@ export default function MedicalRecordsPage() {
             <Select
               label="Patient"
               value={formData.patientId}
-              onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, patientId: value })}
               options={[
                 { value: '', label: 'Select Patient' },
-                ...mockPatients.filter(p => p.status === 'Active').map(p => ({
+                ...availablePatients.map(p => ({
                   value: p.id,
                   label: `${p.name} (${p.id}) - Age: ${p.age}`
                 }))

@@ -434,7 +434,7 @@ export default function BillingPage() {
               />
               <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(value) => setStatusFilter(value)}
                 label="Filter by Status"
               >
                 <option value="all">All Statuses</option>
@@ -663,7 +663,7 @@ export default function BillingPage() {
               <Select
                 label="Patient"
                 value={formData.patientId}
-                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, patientId: value })}
                 options={[
                   { value: '', label: 'Select Patient' },
                   ...availablePatients.map(p => ({
@@ -732,7 +732,7 @@ export default function BillingPage() {
                       <Select
                         label="Category"
                         value={item.category}
-                        onChange={(e) => updateItem(index, 'category', e.target.value)}
+                        onChange={(value) => updateItem(index, 'category', value)}
                         options={[
                           { value: 'Consultation', label: 'Consultation' },
                           { value: 'Procedure', label: 'Procedure' },

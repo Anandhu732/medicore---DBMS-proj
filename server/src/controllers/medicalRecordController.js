@@ -14,6 +14,10 @@ import { toCamelCase } from '../utils/datetime.js';
 
 export const getAllMedicalRecords = async (req, res) => {
   try {
+    console.log('=== GET /api/medical-records called ===');
+    console.log('User:', req.user);
+    console.log('Query params:', req.query);
+
     const {
       page = 1,
       limit = 50,
@@ -88,7 +92,20 @@ export const getAllMedicalRecords = async (req, res) => {
       const transformed = toCamelCase(record);
       transformed.patientName = record.patient_name;
       transformed.doctorName = record.doctor_name;
-      transformed.symptoms = record.symptoms ? JSON.parse(record.symptoms) : [];
+      
+      // Safe JSON parsing for symptoms
+      try {
+        transformed.symptoms = record.symptoms ? JSON.parse(record.symptoms) : [];
+      } catch (e) {
+        console.warn(`Invalid JSON in symptoms for record ${record.id}:`, record.symptoms);
+        // If it's not valid JSON, try to use it as a single string or split by newlines
+        if (typeof record.symptoms === 'string') {
+          transformed.symptoms = record.symptoms.split('\n').filter(s => s.trim());
+        } else {
+          transformed.symptoms = [];
+        }
+      }
+      
       transformed.prescriptions = prescriptions.map(p => toCamelCase(p));
       transformed.labResults = labResults.map(l => toCamelCase(l));
       transformed.attachments = attachments.map(a => toCamelCase(a));
@@ -96,11 +113,19 @@ export const getAllMedicalRecords = async (req, res) => {
       transformedRecords.push(transformed);
     }
 
+    console.log(`Returning ${transformedRecords.length} medical records`);
     return paginatedResponse(res, transformedRecords, pageNum, limitNum, total);
 
   } catch (error) {
     console.error('Get medical records error:', error);
-    return errorResponse(res, 'Failed to retrieve medical records', 500);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlMessage: error.sqlMessage
+    });
+    return errorResponse(res, error.message || 'Failed to retrieve medical records', 500);
   }
 };
 
@@ -141,7 +166,19 @@ export const getMedicalRecordById = async (req, res) => {
     const transformed = toCamelCase(record);
     transformed.patientName = record.patient_name;
     transformed.doctorName = record.doctor_name;
-    transformed.symptoms = record.symptoms ? JSON.parse(record.symptoms) : [];
+    
+    // Safe JSON parsing for symptoms
+    try {
+      transformed.symptoms = record.symptoms ? JSON.parse(record.symptoms) : [];
+    } catch (e) {
+      console.warn(`Invalid JSON in symptoms for record ${record.id}:`, record.symptoms);
+      if (typeof record.symptoms === 'string') {
+        transformed.symptoms = record.symptoms.split('\n').filter(s => s.trim());
+      } else {
+        transformed.symptoms = [];
+      }
+    }
+    
     transformed.prescriptions = prescriptions.map(p => toCamelCase(p));
     transformed.labResults = labResults.map(l => toCamelCase(l));
     transformed.attachments = attachments.map(a => toCamelCase(a));
@@ -171,22 +208,47 @@ export const createMedicalRecord = async (req, res) => {
       labResults = [],
     } = req.body;
 
-    // Get doctor name for updated_by
-    const doctors = await connection.query('SELECT name FROM users WHERE id = ?', [doctorId]);
-    const doctorName = doctors[0][0]?.name || 'Unknown';
+    // Debug logging
+    console.log('=== Creating medical record ===');
+    console.log('Received data:', {
+      patientId,
+      doctorId,
+      date,
+      diagnosis,
+      symptoms,
+      notes,
+      prescriptions,
+      labResults
+    });
 
     const countResult = await connection.query('SELECT COUNT(*) as count FROM medical_records');
+    console.log('Count result:', countResult);
     const count = countResult[0][0].count;
     const recordId = `MR${String(count + 1).padStart(3, '0')}`;
+    console.log('Generated recordId:', recordId);
+
+    console.log('Inserting medical record with values:', [
+      recordId, patientId, doctorId, date, diagnosis,
+      JSON.stringify(symptoms), notes, 1, doctorId
+    ]);
 
     await connection.query(
       `INSERT INTO medical_records (id, patient_id, doctor_id, date, diagnosis, symptoms, notes, version, updated_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [recordId, patientId, doctorId, date, diagnosis, JSON.stringify(symptoms), notes, 1, doctorName]
+      [recordId, patientId, doctorId, date, diagnosis, JSON.stringify(symptoms), notes, 1, doctorId]
     );
 
-    // Insert prescriptions
+    console.log('Medical record inserted successfully');
+
+    // Insert prescriptions (only if they have required fields)
     for (const prescription of prescriptions) {
+      // Skip if any required field is missing
+      if (!prescription.medication || !prescription.dosage ||
+          !prescription.frequency || !prescription.duration) {
+        console.log('Skipping invalid prescription:', prescription);
+        continue;
+      }
+
       const rxCountResult = await connection.query('SELECT COUNT(*) as count FROM medical_record_prescriptions');
       const rxCount = rxCountResult[0][0].count;
       const rxId = `RX${String(rxCount + 1).padStart(3, '0')}`;
@@ -200,8 +262,15 @@ export const createMedicalRecord = async (req, res) => {
       );
     }
 
-    // Insert lab results
+    // Insert lab results (only if they have required fields)
     for (const labResult of labResults) {
+      // Skip if any required field is missing
+      if (!labResult.testName || !labResult.value ||
+          !labResult.unit || !labResult.normalRange) {
+        console.log('Skipping invalid lab result:', labResult);
+        continue;
+      }
+
       const labCountResult = await connection.query('SELECT COUNT(*) as count FROM medical_record_lab_results');
       const labCount = labCountResult[0][0].count;
       const labId = `LAB${String(labCount + 1).padStart(3, '0')}`;
@@ -250,7 +319,14 @@ export const createMedicalRecord = async (req, res) => {
   } catch (error) {
     await connection.rollback();
     console.error('Create medical record error:', error);
-    return errorResponse(res, 'Failed to create medical record', 500);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sql: error.sql,
+      sqlMessage: error.sqlMessage
+    });
+    return errorResponse(res, error.sqlMessage || error.message || 'Failed to create medical record', 500);
   } finally {
     connection.release();
   }

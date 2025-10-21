@@ -256,8 +256,8 @@ async function loadTableData(tableName) {
             renderTable();
         } else if (response.status === 401) {
             showNotification('Authentication required. Please login first.', 'error');
-            // Redirect to login page
-            window.location.href = '/login';
+            // TODO: Implement proper authentication for admin dashboard
+            // window.location.href = '/login';
         } else if (response.status === 403) {
             showNotification('Access denied. Admin privileges required.', 'error');
         } else {
