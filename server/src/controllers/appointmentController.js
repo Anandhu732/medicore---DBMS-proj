@@ -25,7 +25,10 @@ export const getAllAppointments = async (req, res) => {
       patientId = '',
     } = req.query;
 
-    const offset = (page - 1) * limit;
+    // Parse pagination parameters
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 50;
+    const offset = (pageNum - 1) * limitNum;
 
     let whereConditions = [];
     let params = [];
@@ -73,8 +76,8 @@ export const getAllAppointments = async (req, res) => {
        JOIN users u ON a.doctor_id = u.id
        ${whereClause}
        ORDER BY a.date DESC, a.time DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), parseInt(offset)]
+       LIMIT ${limitNum} OFFSET ${offset}`,
+      params
     );
 
     const transformed = appointments.map(apt => {
@@ -84,7 +87,7 @@ export const getAllAppointments = async (req, res) => {
       return data;
     });
 
-    return paginatedResponse(res, transformed, parseInt(page), parseInt(limit), total);
+    return paginatedResponse(res, transformed, pageNum, limitNum, total);
 
   } catch (error) {
     console.error('Get appointments error:', error);

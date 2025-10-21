@@ -22,7 +22,10 @@ export const getAllMedicalRecords = async (req, res) => {
       doctorId = '',
     } = req.query;
 
-    const offset = (page - 1) * limit;
+    // Parse pagination parameters
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 50;
+    const offset = (pageNum - 1) * limitNum;
 
     let whereConditions = [];
     let params = [];
@@ -60,8 +63,8 @@ export const getAllMedicalRecords = async (req, res) => {
        JOIN users u ON mr.doctor_id = u.id
        ${whereClause}
        ORDER BY mr.date DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), parseInt(offset)]
+       LIMIT ${limitNum} OFFSET ${offset}`,
+      params
     );
 
     const transformedRecords = [];
@@ -93,7 +96,7 @@ export const getAllMedicalRecords = async (req, res) => {
       transformedRecords.push(transformed);
     }
 
-    return paginatedResponse(res, transformedRecords, parseInt(page), parseInt(limit), total);
+    return paginatedResponse(res, transformedRecords, pageNum, limitNum, total);
 
   } catch (error) {
     console.error('Get medical records error:', error);

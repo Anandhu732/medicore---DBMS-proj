@@ -21,7 +21,10 @@ export const getAllInvoices = async (req, res) => {
       status = '',
     } = req.query;
 
-    const offset = (page - 1) * limit;
+    // Parse pagination parameters
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 50;
+    const offset = (pageNum - 1) * limitNum;
 
     let whereConditions = [];
     let params = [];
@@ -54,8 +57,8 @@ export const getAllInvoices = async (req, res) => {
        JOIN patients p ON i.patient_id = p.id
        ${whereClause}
        ORDER BY i.date DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), parseInt(offset)]
+       LIMIT ${limitNum} OFFSET ${offset}`,
+      params
     );
 
     const transformedInvoices = [];
@@ -77,7 +80,7 @@ export const getAllInvoices = async (req, res) => {
       transformedInvoices.push(transformed);
     }
 
-    return paginatedResponse(res, transformedInvoices, parseInt(page), parseInt(limit), total);
+    return paginatedResponse(res, transformedInvoices, pageNum, limitNum, total);
 
   } catch (error) {
     console.error('Get invoices error:', error);
