@@ -92,7 +92,7 @@ export const getAllMedicalRecords = async (req, res) => {
       const transformed = toCamelCase(record);
       transformed.patientName = record.patient_name;
       transformed.doctorName = record.doctor_name;
-      
+
       // Safe JSON parsing for symptoms
       try {
         transformed.symptoms = record.symptoms ? JSON.parse(record.symptoms) : [];
@@ -105,7 +105,7 @@ export const getAllMedicalRecords = async (req, res) => {
           transformed.symptoms = [];
         }
       }
-      
+
       transformed.prescriptions = prescriptions.map(p => toCamelCase(p));
       transformed.labResults = labResults.map(l => toCamelCase(l));
       transformed.attachments = attachments.map(a => toCamelCase(a));
@@ -166,7 +166,7 @@ export const getMedicalRecordById = async (req, res) => {
     const transformed = toCamelCase(record);
     transformed.patientName = record.patient_name;
     transformed.doctorName = record.doctor_name;
-    
+
     // Safe JSON parsing for symptoms
     try {
       transformed.symptoms = record.symptoms ? JSON.parse(record.symptoms) : [];
@@ -178,7 +178,7 @@ export const getMedicalRecordById = async (req, res) => {
         transformed.symptoms = [];
       }
     }
-    
+
     transformed.prescriptions = prescriptions.map(p => toCamelCase(p));
     transformed.labResults = labResults.map(l => toCamelCase(l));
     transformed.attachments = attachments.map(a => toCamelCase(a));
