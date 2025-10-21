@@ -232,14 +232,34 @@ async function loadTableData(tableName) {
     try {
         const config = tableConfigs[tableName];
 
+        // Get auth token from localStorage (if available)
+        const user = localStorage.getItem('user');
+        const token = user ? JSON.parse(user).token : null;
+
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
         // Fetch data from admin API
-        const response = await fetch(`${API_BASE}/admin/${tableName}`);
+        const response = await fetch(`${API_BASE}/admin/${tableName}`, {
+            headers: headers
+        });
 
         if (response.ok) {
             const result = await response.json();
             currentData = result.data || [];
             filteredData = [...currentData];
             renderTable();
+        } else if (response.status === 401) {
+            showNotification('Authentication required. Please login first.', 'error');
+            // Redirect to login page
+            window.location.href = '/login';
+        } else if (response.status === 403) {
+            showNotification('Access denied. Admin privileges required.', 'error');
         } else {
             throw new Error('Failed to load data');
         }
@@ -470,12 +490,22 @@ async function saveRecord(event) {
     }
 
     try {
+        // Get auth token
+        const user = localStorage.getItem('user');
+        const token = user ? JSON.parse(user).token : null;
+
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
         // Send update to API
         const response = await fetch(`${API_BASE}/admin/${currentTable}/${editingRecord[config.primaryKey]}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
             body: JSON.stringify(updatedData),
         });
 
@@ -501,9 +531,22 @@ async function deleteRecord(id) {
     const config = tableConfigs[currentTable];
 
     try {
+        // Get auth token
+        const user = localStorage.getItem('user');
+        const token = user ? JSON.parse(user).token : null;
+
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
         // Send delete request to API
         const response = await fetch(`${API_BASE}/admin/${currentTable}/${id}`, {
             method: 'DELETE',
+            headers: headers,
         });
 
         if (response.ok) {

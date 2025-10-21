@@ -5,15 +5,16 @@ import {
   updateRecord,
   deleteRecord,
 } from '../controllers/adminController.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
 /**
  * Admin Routes - Direct database management
  * These routes provide CRUD access to all tables for the admin dashboard
- * 
- * Note: In production, these should be protected with admin-only authentication
- * For MVP, authentication is optional but recommended
+ *
+ * NOTE: Authentication temporarily disabled for development
+ * TODO: Re-enable authentication in production
  */
 
 // Get all records from a table

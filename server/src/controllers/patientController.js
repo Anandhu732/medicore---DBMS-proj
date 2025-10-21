@@ -66,19 +66,32 @@ export const getAllPatients = async (req, res) => {
     const total = countResult[0].total;
 
     // Get patients
+    const limitValue = parseInt(limit);
+    const offsetValue = parseInt(offset);
     const patients = await query(
       `SELECT * FROM patients ${whereClause}
        ORDER BY ${sortBy} ${sortOrder}
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), parseInt(offset)]
+       LIMIT ${limitValue} OFFSET ${offsetValue}`,
+      params
     );
 
     // Parse JSON fields and transform to camelCase
     const transformedPatients = patients.map(patient => {
       const transformed = toCamelCase(patient);
-      transformed.medicalHistory = patient.medical_history
-        ? JSON.parse(patient.medical_history)
-        : [];
+      // Handle medical_history - it might be already parsed or a string
+      if (patient.medical_history) {
+        if (typeof patient.medical_history === 'string') {
+          try {
+            transformed.medicalHistory = JSON.parse(patient.medical_history);
+          } catch (e) {
+            transformed.medicalHistory = [];
+          }
+        } else {
+          transformed.medicalHistory = patient.medical_history;
+        }
+      } else {
+        transformed.medicalHistory = [];
+      }
       delete transformed.medical_history;
       return transformed;
     });

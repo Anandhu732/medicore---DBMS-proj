@@ -1,5 +1,8 @@
 import express from 'express';
-import { getDashboardStats, getRecentActivity } from '../controllers/dashboardController.js';
+import {
+  getDashboardStats,
+  getRecentActivity,
+} from '../controllers/dashboardController.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -14,9 +17,9 @@ const router = express.Router();
 // @access  Private (All roles)
 router.get('/stats', authenticate, getDashboardStats);
 
-// @route   GET /api/dashboard/recent
-// @desc    Get recent activity
+// @route   GET /api/dashboard/activities
+// @desc    Get recent activities
 // @access  Private (All roles)
-router.get('/recent', authenticate, getRecentActivity);
+router.get('/activities', authenticate, getRecentActivity);
 
 export default router;

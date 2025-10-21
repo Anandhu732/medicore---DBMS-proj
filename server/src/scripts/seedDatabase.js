@@ -11,16 +11,24 @@ async function seedDatabase() {
     // Clear existing data
     console.log('[CLEAR] Clearing existing data...');
     await query('SET FOREIGN_KEY_CHECKS = 0');
-    await query('TRUNCATE TABLE invoice_items');
-    await query('TRUNCATE TABLE invoices');
-    await query('TRUNCATE TABLE medical_record_attachments');
-    await query('TRUNCATE TABLE medical_record_lab_results');
-    await query('TRUNCATE TABLE medical_record_prescriptions');
-    await query('TRUNCATE TABLE medical_records');
-    await query('TRUNCATE TABLE appointments');
-    await query('TRUNCATE TABLE patients');
-    await query('TRUNCATE TABLE users');
-    await query('TRUNCATE TABLE reports');
+    
+    // Only truncate tables that exist
+    const tables = [
+      'invoice_items', 'invoices', 'medical_record_attachments', 
+      'medical_record_lab_results', 'medical_record_prescriptions',
+      'medical_records', 'appointments', 'patients', 'users', 'reports'
+    ];
+    
+    for (const table of tables) {
+      try {
+        await query(`TRUNCATE TABLE ${table}`);
+      } catch (error) {
+        if (!error.message.includes("doesn't exist")) {
+          throw error;
+        }
+      }
+    }
+    
     await query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Existing data cleared\n');
 

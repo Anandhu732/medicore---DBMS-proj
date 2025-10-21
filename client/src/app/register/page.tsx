@@ -7,6 +7,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Select from '@/components/Select';
 import { isValidEmail, isValidPhone } from '@/utils/helpers';
+import { api } from '@/utils/api';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -61,11 +62,34 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    // TODO: Replace with actual API call
-    setTimeout(() => {
+    try {
+      // Call the actual API for registration
+      const response = await api.auth.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        department: formData.role === 'doctor' ? 'General Medicine' : null,
+      });
+
+      // Store user data with token in localStorage
+      const userData = {
+        ...response.user,
+        token: response.token,
+      };
+
+      localStorage.setItem('user', JSON.stringify(userData));
       setLoading(false);
-      router.push('/login');
-    }, 1500);
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      setErrors({
+        general: error.message || 'Registration failed. Please try again.'
+      });
+      setLoading(false);
+    }
   };
 
   return (
@@ -168,6 +192,12 @@ export default function RegisterPage() {
                 </Link>
               </label>
             </div>
+
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" loading={loading}>
               Create Account

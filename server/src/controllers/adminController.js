@@ -3,6 +3,13 @@ import { successResponse, errorResponse, paginatedResponse } from '../utils/resp
 import { toCamelCase } from '../utils/datetime.js';
 
 /**
+ * Helper: Convert camelCase to snake_case
+ */
+function toSnakeCase(str) {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+/**
  * Admin Controller
  * Handles all admin dashboard CRUD operations for direct database management
  * Bypasses some business logic validations for administrative purposes
@@ -16,6 +23,10 @@ export const getAllRecords = async (req, res) => {
   try {
     const { table } = req.params;
     const { page = 1, limit = 50, search = '', sortBy = 'created_at', sortOrder = 'DESC' } = req.query;
+
+    // Parse pagination parameters as integers
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 50;
 
     // Whitelist allowed tables for security
     const allowedTables = [
@@ -32,7 +43,7 @@ export const getAllRecords = async (req, res) => {
       return errorResponse(res, 'Invalid table name', 400);
     }
 
-    const offset = (page - 1) * limit;
+    const offset = (pageNum - 1) * limitNum;
 
     // Build search condition based on table
     let whereClause = '';
@@ -42,7 +53,7 @@ export const getAllRecords = async (req, res) => {
       const searchColumns = getSearchColumns(table);
       const searchConditions = searchColumns.map(col => `${col} LIKE ?`).join(' OR ');
       whereClause = `WHERE ${searchConditions}`;
-      
+
       searchColumns.forEach(col => {
         params.push(`%${search}%`);
       });
@@ -53,14 +64,14 @@ export const getAllRecords = async (req, res) => {
     const countResult = await query(countQuery, params);
     const total = countResult[0].total;
 
-    // Get records
-    const dataQuery = `SELECT * FROM ${table} ${whereClause} ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?`;
-    const records = await query(dataQuery, [...params, parseInt(limit), parseInt(offset)]);
+    // Get records - Use direct values for LIMIT/OFFSET (MySQL 8.4 compatibility)
+    const dataQuery = `SELECT * FROM ${table} ${whereClause} ORDER BY ${sortBy} ${sortOrder} LIMIT ${limitNum} OFFSET ${offset}`;
+    const records = await query(dataQuery, params);
 
     // Transform to camelCase
     const transformedRecords = records.map(record => transformRecord(record, table));
 
-    return paginatedResponse(res, transformedRecords, parseInt(page), parseInt(limit), total);
+    return paginatedResponse(res, transformedRecords, pageNum, limitNum, total);
 
   } catch (error) {
     console.error('Admin get all records error:', error);
@@ -232,25 +243,37 @@ function getSearchColumns(table) {
 function transformRecord(record, table) {
   const transformed = toCamelCase(record);
 
-  // Handle JSON fields
+  // Handle JSON fields - only parse if it's valid JSON
   if (table === 'patients' && record.medical_history) {
-    transformed.medicalHistory = JSON.parse(record.medical_history);
+    try {
+      // Check if it starts with [ or { (valid JSON)
+      const trimmed = record.medical_history.trim();
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        transformed.medicalHistory = JSON.parse(record.medical_history);
+      } else {
+        transformed.medicalHistory = record.medical_history;
+      }
+    } catch (e) {
+      transformed.medicalHistory = record.medical_history;
+    }
     delete transformed.medical_history;
   }
 
   if (table === 'medical_records' && record.symptoms) {
-    transformed.symptoms = JSON.parse(record.symptoms);
+    try {
+      const trimmed = record.symptoms.trim();
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        transformed.symptoms = JSON.parse(record.symptoms);
+      } else {
+        transformed.symptoms = record.symptoms;
+      }
+    } catch (e) {
+      transformed.symptoms = record.symptoms;
+    }
     delete transformed.symptoms;
   }
 
   return transformed;
-}
-
-/**
- * Helper: Convert camelCase to snake_case
- */
-function toSnakeCase(str) {
-  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
 export default {

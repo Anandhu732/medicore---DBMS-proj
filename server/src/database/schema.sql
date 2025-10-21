@@ -8,6 +8,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ============================================
 -- Drop existing tables
 -- ============================================
+DROP TABLE IF EXISTS `logs`;
 DROP TABLE IF EXISTS `invoice_items`;
 DROP TABLE IF EXISTS `invoices`;
 DROP TABLE IF EXISTS `medical_record_attachments`;
@@ -208,6 +209,27 @@ CREATE TABLE `reports` (
   FOREIGN KEY (`generated_by`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   INDEX `idx_report_type` (`report_type`),
   INDEX `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Logs Table (Audit Trail)
+-- ============================================
+CREATE TABLE `logs` (
+  `id` VARCHAR(50) NOT NULL PRIMARY KEY,
+  `user_id` VARCHAR(50) NULL,
+  `action` VARCHAR(100) NOT NULL,
+  `table_name` VARCHAR(100) NOT NULL,
+  `record_id` VARCHAR(50) NULL,
+  `old_values` JSON NULL,
+  `new_values` JSON NULL,
+  `ip_address` VARCHAR(45) NULL,
+  `user_agent` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_user` (`user_id`),
+  INDEX `idx_action` (`action`),
+  INDEX `idx_table` (`table_name`),
+  INDEX `idx_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

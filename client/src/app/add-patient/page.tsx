@@ -88,15 +88,23 @@ export default function AddPatientPage() {
     setIsLoading(true);
     try {
       const patientData = {
-        ...formData,
-        id: `PAT-${Date.now()}`,
-        status: 'Active',
-        registrationDate: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        name: formData.name,
+        age: parseInt(formData.age),
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        emergencyContact: formData.emergencyContact + ' : ' + formData.emergencyContactPhone,
+        medicalHistory: [
+          ...(formData.medicalHistory ? [{ condition: formData.medicalHistory, date: new Date().toISOString().split('T')[0] }] : []),
+          ...(formData.allergies ? [{ allergy: formData.allergies }] : []),
+          ...(formData.medications ? [{ medication: formData.medications }] : []),
+        ].filter(item => Object.keys(item).length > 0),
       };
 
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the actual API
+      const response = await api.patients.create(patientData);
       
       showToast('Patient added successfully!', 'success');
       router.push('/patients');

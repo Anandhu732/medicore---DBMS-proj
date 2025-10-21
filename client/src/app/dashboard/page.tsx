@@ -8,22 +8,53 @@ import Card from '@/components/Card';
 import Table from '@/components/Table';
 import { mockDashboardStats, mockAppointments, mockPatients } from '@/utils/mockData';
 import { formatCurrency, formatDate, getStatusColor } from '@/utils/helpers';
+import { api } from '@/utils/api';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [recentPatients, setRecentPatients] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Replace with actual authentication check
     const userData = localStorage.getItem('user');
     if (!userData) {
       router.push('/login');
     } else {
       setUser(JSON.parse(userData));
+      loadDashboardData();
     }
   }, [router]);
 
-  if (!user) {
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      // Load real-time stats from API
+      const [statsData, appointmentsData, patientsData] = await Promise.all([
+        api.dashboard.getStats(),
+        api.appointments.getAll({ date: new Date().toISOString().split('T')[0] }),
+        api.patients.getAll({ limit: 5, status: 'Active' })
+      ]);
+      
+      setStats(statsData);
+      setTodayAppointments(appointmentsData);
+      setRecentPatients(patientsData);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      // Fallback to mock data on error
+      setStats(mockDashboardStats);
+      setTodayAppointments(mockAppointments.filter(
+        (apt) => apt.date === new Date().toISOString().split('T')[0]
+      ).slice(0, 5));
+      setRecentPatients(mockPatients.filter(p => p.status === 'Active').slice(0, 5));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!user || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -34,11 +65,8 @@ export default function DashboardPage() {
     );
   }
 
-  const stats = mockDashboardStats;
-  const todayAppointments = mockAppointments.filter(
-    (apt) => apt.date === new Date().toISOString().split('T')[0]
-  ).slice(0, 5);
-  const recentPatients = mockPatients.filter(p => p.status === 'Active').slice(0, 5);
+  // Use real data if available, fallback to mock data
+  const displayStats = stats || mockDashboardStats;
 
   const appointmentColumns = [
     {
@@ -113,8 +141,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <StatCard
             title="Total Patients"
-            value={stats.totalPatients}
-            trend={{ value: stats.patientGrowth, isPositive: true }}
+            value={displayStats.totalPatients}
+            trend={{ value: displayStats.patientGrowth, isPositive: true }}
             variant="accent"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,8 +152,8 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Today's Appointments"
-            value={stats.todayAppointments}
-            trend={{ value: stats.appointmentGrowth, isPositive: true }}
+            value={displayStats.todayAppointments}
+            trend={{ value: displayStats.appointmentGrowth, isPositive: true }}
             variant="success"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -135,7 +163,7 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Pending Invoices"
-            value={stats.pendingInvoices}
+            value={displayStats.pendingInvoices}
             variant="warning"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -145,8 +173,8 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Monthly Revenue"
-            value={formatCurrency(stats.monthlyRevenue)}
-            trend={{ value: stats.revenueGrowth, isPositive: true }}
+            value={formatCurrency(displayStats.monthlyRevenue)}
+            trend={{ value: displayStats.revenueGrowth, isPositive: true }}
             variant="success"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,7 +213,7 @@ export default function DashboardPage() {
           {/* Recent Patients */}
           <Card
             title="Recent Patients"
-            subtitle={`${stats.activePatients} active patients`}
+            subtitle={`${displayStats.activePatients} active patients`}
             action={
               <button
                 onClick={() => router.push('/patients')}
