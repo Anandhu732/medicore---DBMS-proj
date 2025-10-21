@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import Card from '@/components/Card';
 import StatCard from '@/components/StatCard';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { PERMISSIONS } from '@/utils/constants';
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -60,12 +62,13 @@ export default function ReportsPage() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive insights into your hospital operations</p>
-        </div>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_REPORTS]}>
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Reports & Analytics</h1>
+            <p className="text-muted-foreground">Comprehensive insights into your hospital operations</p>
+          </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -176,8 +179,8 @@ export default function ReportsPage() {
               {departmentData.map((dept, index) => (
                 <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
+                    <div
+                      className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: dept.color }}
                     />
                     <span className="font-medium text-foreground">{dept.name}</span>
@@ -212,5 +215,6 @@ export default function ReportsPage() {
         </div>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }

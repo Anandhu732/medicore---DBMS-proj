@@ -12,6 +12,8 @@ import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
 import { mockPatients } from '@/utils/mockData';
 import { formatCurrency } from '@/utils/helpers';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { PERMISSIONS } from '@/utils/constants';
 
 export default function CreateInvoicePage() {
   const router = useRouter();
@@ -49,7 +51,7 @@ export default function CreateInvoicePage() {
     try {
       const patients = mockPatients.filter(p => p.status === 'Active');
       setAvailablePatients(patients);
-      
+
       // Set default due date to 30 days from now
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30);
@@ -93,7 +95,7 @@ export default function CreateInvoicePage() {
   const updateInvoiceItem = (index: number, field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.map((item, i) => 
+      items: prev.items.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
       )
     }));
@@ -140,30 +142,34 @@ export default function CreateInvoicePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
+      // Transform items to match backend schema with calculated totals
+      const itemsPayload = formData.items.map(item => ({
+        description: item.description,
+        category: item.category,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.quantity * item.price, // Calculate total for each item
+      }));
+
       const invoiceData = {
-        ...formData,
-        id: `INV-${Date.now()}`,
-        invoiceNumber: `INV-${Date.now()}`,
-        date: new Date().toISOString(),
-        subtotal: calculateSubtotal(),
-        discountAmount: calculateDiscount(),
-        taxAmount: calculateTax(),
-        total: calculateTotal(),
-        status: 'Pending',
-        createdAt: new Date().toISOString(),
+        patientId: formData.patientId,
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+        dueDate: formData.dueDate,
+        items: itemsPayload,
       };
 
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Call the actual API
+      await api.invoices.create(invoiceData);
+
       showToast('Invoice created successfully!', 'success');
       router.push('/billing');
     } catch (error: any) {
+      console.error('Failed to create invoice:', error);
       showToast(error.message || 'Failed to create invoice', 'error');
     } finally {
       setIsLoading(false);
@@ -186,14 +192,15 @@ export default function CreateInvoicePage() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Create Invoice</h1>
-            <p className="text-gray-600 mt-1">Generate a new invoice for a patient</p>
-          </div>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.MANAGE_BILLING]}>
+      <Layout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Create Invoice</h1>
+              <p className="text-gray-600 mt-1">Generate a new invoice for a patient</p>
+            </div>
           <Button
             onClick={handleCancel}
             variant="outline"
@@ -441,5 +448,6 @@ export default function CreateInvoicePage() {
         </Card>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }

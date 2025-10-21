@@ -8,6 +8,8 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Select from '@/components/Select';
 import { useToast } from '@/components/Toast';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { PERMISSIONS } from '@/utils/constants';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -19,13 +21,13 @@ export default function SettingsPage() {
     smsNotifications: false,
     marketingEmails: false,
     twoFactorAuth: false,
-    
+
     // Notification Preferences
     appointmentReminders: true,
     systemUpdates: true,
     securityAlerts: true,
     weeklyReports: false,
-    
+
     // System Preferences
     theme: 'light',
     language: 'en',
@@ -86,12 +88,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-          <p className="text-muted-foreground">Manage your account settings and preferences</p>
-        </div>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.MANAGE_SETTINGS]}>
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+            <p className="text-muted-foreground">Manage your account settings and preferences</p>
+          </div>
 
         <div className="space-y-8">
           {/* Account Settings */}
@@ -338,6 +341,7 @@ export default function SettingsPage() {
         </div>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }
 

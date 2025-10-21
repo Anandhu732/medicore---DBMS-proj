@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { useToast } from './Toast';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();
+  const { showToast } = useToast();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -19,8 +21,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       router.push('/login');
     } else {
       setUser(JSON.parse(userData));
+
+      // Check for unauthorized message
+      const unauthorizedMessage = sessionStorage.getItem('unauthorized_message');
+      if (unauthorizedMessage) {
+        showToast(unauthorizedMessage, 'error');
+        sessionStorage.removeItem('unauthorized_message');
+      }
     }
-  }, [router]);
+  }, [router, showToast]);
 
   if (!user) {
     return (

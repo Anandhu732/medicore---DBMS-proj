@@ -11,6 +11,8 @@ import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
 import { mockPatients, mockUsers } from '@/utils/mockData';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { PERMISSIONS } from '@/utils/constants';
 
 export default function AddMedicalRecordPage() {
   const router = useRouter();
@@ -52,7 +54,7 @@ export default function AddMedicalRecordPage() {
     try {
       const patients = mockPatients.filter(p => p.status === 'Active');
       const doctors = mockUsers.filter(u => u.role === 'doctor');
-      
+
       setAvailablePatients(patients);
       setAvailableDoctors(doctors);
     } catch (error) {
@@ -84,7 +86,7 @@ export default function AddMedicalRecordPage() {
   const updatePrescription = (index: number, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      prescriptions: prev.prescriptions.map((prescription, i) => 
+      prescriptions: prev.prescriptions.map((prescription, i) =>
         i === index ? { ...prescription, [field]: value } : prescription
       )
     }));
@@ -107,7 +109,7 @@ export default function AddMedicalRecordPage() {
   const updateLabResult = (index: number, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      labResults: prev.labResults.map((result, i) => 
+      labResults: prev.labResults.map((result, i) =>
         i === index ? { ...result, [field]: value } : result
       )
     }));
@@ -135,24 +137,50 @@ export default function AddMedicalRecordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
+      // Transform symptoms from string to array
+      const symptomsArray = formData.symptoms.split('\n').filter(s => s.trim());
+
+      // Transform prescriptions to match backend schema
+      const prescriptionsPayload = formData.prescriptions.map(p => ({
+        medication: p.medication,
+        dosage: p.dosage,
+        frequency: p.frequency,
+        duration: p.duration,
+        instructions: '' // Optional field
+      }));
+
+      // Transform lab results to match backend schema
+      const labResultsPayload = formData.labResults.map(l => ({
+        testName: l.test,
+        value: l.result,
+        unit: '', // Optional field
+        normalRange: l.normalRange,
+        status: l.status
+      }));
+
       const recordData = {
-        ...formData,
-        id: `MR-${Date.now()}`,
-        date: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        patientId: formData.patientId,
+        doctorId: formData.doctorId,
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+        diagnosis: formData.diagnosis,
+        symptoms: symptomsArray,
+        notes: formData.notes,
+        prescriptions: prescriptionsPayload,
+        labResults: labResultsPayload,
       };
 
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Call the actual API
+      await api.medicalRecords.create(recordData);
+
       showToast('Medical record added successfully!', 'success');
       router.push('/medical-records');
     } catch (error: any) {
+      console.error('Failed to add medical record:', error);
       showToast(error.message || 'Failed to add medical record', 'error');
     } finally {
       setIsLoading(false);
@@ -175,14 +203,15 @@ export default function AddMedicalRecordPage() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Add Medical Record</h1>
-            <p className="text-gray-600 mt-1">Create a new medical record for a patient</p>
-          </div>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.EDIT_MEDICAL_RECORDS]}>
+      <Layout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Add Medical Record</h1>
+              <p className="text-gray-600 mt-1">Create a new medical record for a patient</p>
+            </div>
           <Button
             onClick={handleCancel}
             variant="outline"
@@ -478,5 +507,6 @@ export default function AddMedicalRecordPage() {
         </Card>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }

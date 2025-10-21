@@ -13,9 +13,10 @@ import Select from '@/components/Select';
 import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
-import { BLOOD_GROUPS, PATIENT_STATUS } from '@/utils/constants';
+import { BLOOD_GROUPS, PATIENT_STATUS, PERMISSIONS } from '@/utils/constants';
 import { Patient } from '@/utils/types';
 import { getStatusColor, formatDate } from '@/utils/helpers';
+import { can } from '@/utils/permissions';
 
 export default function PatientsPage() {
   const router = useRouter();
@@ -228,17 +229,19 @@ export default function PatientsPage() {
       header: 'Actions',
       render: (_: any, row: Patient) => (
         <div className="flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditPatient(row);
-            }}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            aria-label={`Edit ${row.name}`}
-          >
-            Edit
-          </button>
-          {row.status === 'Active' && (
+          {can.editPatients(user.role) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditPatient(row);
+              }}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              aria-label={`Edit ${row.name}`}
+            >
+              Edit
+            </button>
+          )}
+          {can.editPatients(user.role) && row.status === 'Active' && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -249,6 +252,9 @@ export default function PatientsPage() {
             >
               Archive
             </button>
+          )}
+          {!can.editPatients(user.role) && (
+            <span className="text-gray-400 text-sm">View only</span>
           )}
         </div>
       ),
@@ -265,13 +271,15 @@ export default function PatientsPage() {
               <h1 className="text-3xl font-bold text-gray-900">Patients</h1>
               <p className="text-gray-600 mt-1">Manage patient records and information</p>
             </div>
-            <Button onClick={() => router.push('/add-patient')} icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            }>
-              Add Patient
-            </Button>
+            {can.editPatients(user.role) && (
+              <Button onClick={() => router.push('/add-patient')} icon={
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              }>
+                Add Patient
+              </Button>
+            )}
           </div>
 
           {/* Filters */}

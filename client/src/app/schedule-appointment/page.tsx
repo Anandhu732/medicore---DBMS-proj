@@ -46,7 +46,7 @@ export default function ScheduleAppointmentPage() {
       // Load patients and doctors
       const patients = mockPatients.filter(p => p.status === 'Active');
       const doctors = mockUsers.filter(u => u.role === 'doctor');
-      
+
       setAvailablePatients(patients);
       setAvailableDoctors(doctors);
     } catch (error) {
@@ -87,23 +87,28 @@ export default function ScheduleAppointmentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
       const appointmentData = {
-        ...formData,
-        status: 'Scheduled',
-        createdAt: new Date().toISOString(),
+        patientId: formData.patientId,
+        doctorId: formData.doctorId,
+        date: formData.date,
+        time: formData.time,
+        duration: parseInt(formData.duration),
+        reason: formData.reason,
+        notes: formData.notes || '',
       };
 
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Call the actual API
+      await api.appointments.create(appointmentData);
+
       showToast('Appointment scheduled successfully!', 'success');
       router.push('/appointments');
     } catch (error: any) {
+      console.error('Failed to schedule appointment:', error);
       showToast(error.message || 'Failed to schedule appointment', 'error');
     } finally {
       setIsLoading(false);

@@ -10,7 +10,8 @@ import Select from '@/components/Select';
 import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
-import { BLOOD_GROUPS, PATIENT_STATUS } from '@/utils/constants';
+import { BLOOD_GROUPS, PATIENT_STATUS, PERMISSIONS } from '@/utils/constants';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function AddPatientPage() {
   const router = useRouter();
@@ -82,33 +83,57 @@ export default function AddPatientPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
+      // Build medical history array
+      const medicalHistory: any[] = [];
+
+      if (formData.medicalHistory.trim()) {
+        medicalHistory.push({
+          type: 'condition',
+          description: formData.medicalHistory,
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      if (formData.allergies.trim()) {
+        medicalHistory.push({
+          type: 'allergy',
+          description: formData.allergies,
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      if (formData.medications.trim()) {
+        medicalHistory.push({
+          type: 'medication',
+          description: formData.medications,
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+
       const patientData = {
-        name: formData.name,
+        name: formData.name.trim(),
         age: parseInt(formData.age),
         gender: formData.gender,
         bloodGroup: formData.bloodGroup,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address,
-        emergencyContact: formData.emergencyContact + ' : ' + formData.emergencyContactPhone,
-        medicalHistory: [
-          ...(formData.medicalHistory ? [{ condition: formData.medicalHistory, date: new Date().toISOString().split('T')[0] }] : []),
-          ...(formData.allergies ? [{ allergy: formData.allergies }] : []),
-          ...(formData.medications ? [{ medication: formData.medications }] : []),
-        ].filter(item => Object.keys(item).length > 0),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        address: formData.address.trim(),
+        emergencyContact: `${formData.emergencyContact.trim()} : ${formData.emergencyContactPhone.trim()}`,
+        medicalHistory: medicalHistory,
       };
 
       // Call the actual API
       const response = await api.patients.create(patientData);
-      
+
       showToast('Patient added successfully!', 'success');
       router.push('/patients');
     } catch (error: any) {
+      console.error('Failed to add patient:', error);
       showToast(error.message || 'Failed to add patient', 'error');
     } finally {
       setIsLoading(false);
@@ -131,14 +156,15 @@ export default function AddPatientPage() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Add New Patient</h1>
-            <p className="text-gray-600 mt-1">Register a new patient in the system</p>
-          </div>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.EDIT_PATIENTS]}>
+      <Layout>
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Add New Patient</h1>
+              <p className="text-gray-600 mt-1">Register a new patient in the system</p>
+            </div>
           <Button
             onClick={handleCancel}
             variant="outline"
@@ -371,5 +397,6 @@ export default function AddPatientPage() {
         </Card>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }

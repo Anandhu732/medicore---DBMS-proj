@@ -1,0 +1,464 @@
+{
+  "roles": {
+    "admin": {
+      "name": "Administrator",
+      "description": "Full system access with all privileges including user management and system configuration",
+      "level": 3,
+      "defaultUsers": [
+        {
+          "id": "4",
+          "name": "Admin User",
+          "email": "admin@medicore.com"
+        }
+      ]
+    },
+    "doctor": {
+      "name": "Doctor",
+      "description": "Medical staff with access to patient medical records, appointments, and clinical data",
+      "level": 2,
+      "department": "required",
+      "defaultUsers": [
+        {
+          "id": "1",
+          "name": "Dr. Sarah Johnson",
+          "email": "sarah.johnson@medicore.com",
+          "department": "Cardiology"
+        },
+        {
+          "id": "2",
+          "name": "Dr. Michael Chen",
+          "email": "michael.chen@medicore.com",
+          "department": "Neurology"
+        }
+      ]
+    },
+    "receptionist": {
+      "name": "Receptionist",
+      "description": "Front desk staff handling patient registration, appointments, and billing",
+      "level": 1,
+      "defaultUsers": [
+        {
+          "id": "3",
+          "name": "Emily Davis",
+          "email": "emily.davis@medicore.com"
+        }
+      ]
+    }
+  },
+  "resources": {
+    "patients": {
+      "name": "Patient Management",
+      "description": "Patient registration, demographics, and basic information",
+      "routes": [
+        "GET /api/patients",
+        "GET /api/patients/:id",
+        "POST /api/patients",
+        "PUT /api/patients/:id",
+        "PATCH /api/patients/:id/archive",
+        "PATCH /api/patients/:id/restore",
+        "DELETE /api/patients/:id"
+      ]
+    },
+    "appointments": {
+      "name": "Appointment Management",
+      "description": "Scheduling and managing patient appointments",
+      "routes": [
+        "GET /api/appointments",
+        "GET /api/appointments/:id",
+        "POST /api/appointments",
+        "PUT /api/appointments/:id",
+        "PATCH /api/appointments/:id/status",
+        "DELETE /api/appointments/:id"
+      ]
+    },
+    "medical_records": {
+      "name": "Medical Records",
+      "description": "Patient medical history, diagnoses, prescriptions, and lab results",
+      "routes": [
+        "GET /api/medical-records",
+        "GET /api/medical-records/:id",
+        "POST /api/medical-records",
+        "PUT /api/medical-records/:id",
+        "DELETE /api/medical-records/:id"
+      ],
+      "sensitivity": "high",
+      "requiresConsent": true
+    },
+    "billing": {
+      "name": "Billing & Invoices",
+      "description": "Financial transactions, invoicing, and payment processing",
+      "routes": [
+        "GET /api/billing/invoices",
+        "GET /api/billing/invoices/:id",
+        "POST /api/billing/invoices",
+        "PATCH /api/billing/invoices/:id/payment",
+        "PATCH /api/billing/invoices/:id/status",
+        "DELETE /api/billing/invoices/:id"
+      ]
+    },
+    "reports": {
+      "name": "Reports & Analytics",
+      "description": "System reports, analytics, and data insights",
+      "routes": [
+        "GET /api/reports",
+        "GET /api/reports/:id",
+        "POST /api/reports"
+      ]
+    },
+    "dashboard": {
+      "name": "Dashboard",
+      "description": "Overview statistics and recent activities",
+      "routes": [
+        "GET /api/dashboard/stats",
+        "GET /api/dashboard/activities"
+      ]
+    },
+    "users": {
+      "name": "User Management",
+      "description": "System user accounts and role management",
+      "routes": [
+        "GET /api/admin/users",
+        "GET /api/admin/users/:id",
+        "POST /api/admin/users",
+        "PUT /api/admin/users/:id",
+        "DELETE /api/admin/users/:id"
+      ],
+      "adminOnly": true
+    },
+    "settings": {
+      "name": "System Settings",
+      "description": "Application configuration and system settings",
+      "routes": [
+        "GET /api/admin/settings",
+        "PUT /api/admin/settings"
+      ],
+      "adminOnly": true
+    }
+  },
+  "permissions": {
+    "view_patients": {
+      "action": "read",
+      "resource": "patients",
+      "description": "View patient list and basic information",
+      "routes": ["GET /api/patients", "GET /api/patients/:id"]
+    },
+    "create_patients": {
+      "action": "create",
+      "resource": "patients",
+      "description": "Register new patients",
+      "routes": ["POST /api/patients"]
+    },
+    "edit_patients": {
+      "action": "update",
+      "resource": "patients",
+      "description": "Update patient information",
+      "routes": ["PUT /api/patients/:id"]
+    },
+    "archive_patients": {
+      "action": "archive",
+      "resource": "patients",
+      "description": "Archive or restore patient records",
+      "routes": ["PATCH /api/patients/:id/archive", "PATCH /api/patients/:id/restore"]
+    },
+    "delete_patients": {
+      "action": "delete",
+      "resource": "patients",
+      "description": "Permanently delete patient records",
+      "routes": ["DELETE /api/patients/:id"],
+      "dangerous": true
+    },
+    "view_appointments": {
+      "action": "read",
+      "resource": "appointments",
+      "description": "View appointment schedules",
+      "routes": ["GET /api/appointments", "GET /api/appointments/:id"]
+    },
+    "manage_appointments": {
+      "action": "write",
+      "resource": "appointments",
+      "description": "Create and update appointments",
+      "routes": ["POST /api/appointments", "PUT /api/appointments/:id", "PATCH /api/appointments/:id/status"]
+    },
+    "delete_appointments": {
+      "action": "delete",
+      "resource": "appointments",
+      "description": "Cancel and delete appointments",
+      "routes": ["DELETE /api/appointments/:id"]
+    },
+    "view_medical_records": {
+      "action": "read",
+      "resource": "medical_records",
+      "description": "View patient medical records",
+      "routes": ["GET /api/medical-records", "GET /api/medical-records/:id"],
+      "requiresConsent": true
+    },
+    "manage_medical_records": {
+      "action": "write",
+      "resource": "medical_records",
+      "description": "Create and update medical records",
+      "routes": ["POST /api/medical-records", "PUT /api/medical-records/:id"],
+      "requiresConsent": true
+    },
+    "delete_medical_records": {
+      "action": "delete",
+      "resource": "medical_records",
+      "description": "Delete medical records",
+      "routes": ["DELETE /api/medical-records/:id"],
+      "dangerous": true,
+      "requiresConsent": true
+    },
+    "view_billing": {
+      "action": "read",
+      "resource": "billing",
+      "description": "View invoices and payment information",
+      "routes": ["GET /api/billing/invoices", "GET /api/billing/invoices/:id"]
+    },
+    "manage_billing": {
+      "action": "write",
+      "resource": "billing",
+      "description": "Create invoices and process payments",
+      "routes": ["POST /api/billing/invoices", "PATCH /api/billing/invoices/:id/payment", "PATCH /api/billing/invoices/:id/status"]
+    },
+    "delete_billing": {
+      "action": "delete",
+      "resource": "billing",
+      "description": "Delete invoices",
+      "routes": ["DELETE /api/billing/invoices/:id"],
+      "dangerous": true
+    },
+    "view_reports": {
+      "action": "read",
+      "resource": "reports",
+      "description": "View system reports and analytics",
+      "routes": ["GET /api/reports", "GET /api/reports/:id"]
+    },
+    "generate_reports": {
+      "action": "create",
+      "resource": "reports",
+      "description": "Generate new reports",
+      "routes": ["POST /api/reports"]
+    },
+    "view_dashboard": {
+      "action": "read",
+      "resource": "dashboard",
+      "description": "Access dashboard statistics and activities",
+      "routes": ["GET /api/dashboard/stats", "GET /api/dashboard/activities"]
+    },
+    "manage_users": {
+      "action": "write",
+      "resource": "users",
+      "description": "Create, update, and delete system users",
+      "routes": ["GET /api/admin/users", "GET /api/admin/users/:id", "POST /api/admin/users", "PUT /api/admin/users/:id", "DELETE /api/admin/users/:id"],
+      "adminOnly": true
+    },
+    "manage_settings": {
+      "action": "write",
+      "resource": "settings",
+      "description": "Configure system settings",
+      "routes": ["GET /api/admin/settings", "PUT /api/admin/settings"],
+      "adminOnly": true
+    }
+  },
+  "rolePermissions": {
+    "admin": [
+      "view_patients",
+      "create_patients",
+      "edit_patients",
+      "archive_patients",
+      "delete_patients",
+      "view_appointments",
+      "manage_appointments",
+      "delete_appointments",
+      "view_medical_records",
+      "manage_medical_records",
+      "delete_medical_records",
+      "view_billing",
+      "manage_billing",
+      "delete_billing",
+      "view_reports",
+      "generate_reports",
+      "view_dashboard",
+      "manage_users",
+      "manage_settings"
+    ],
+    "doctor": [
+      "view_patients",
+      "create_patients",
+      "edit_patients",
+      "view_appointments",
+      "manage_appointments",
+      "view_medical_records",
+      "manage_medical_records",
+      "view_reports",
+      "generate_reports",
+      "view_dashboard"
+    ],
+    "receptionist": [
+      "view_patients",
+      "create_patients",
+      "edit_patients",
+      "archive_patients",
+      "view_appointments",
+      "manage_appointments",
+      "view_billing",
+      "manage_billing",
+      "view_dashboard"
+    ]
+  },
+  "frontendRoutes": {
+    "/dashboard": {
+      "name": "Dashboard",
+      "requiredPermissions": ["view_dashboard"],
+      "allowedRoles": ["admin", "doctor", "receptionist"]
+    },
+    "/patients": {
+      "name": "Patient List",
+      "requiredPermissions": ["view_patients"],
+      "allowedRoles": ["admin", "doctor", "receptionist"]
+    },
+    "/add-patient": {
+      "name": "Add Patient",
+      "requiredPermissions": ["create_patients"],
+      "allowedRoles": ["admin", "doctor", "receptionist"]
+    },
+    "/appointments": {
+      "name": "Appointments",
+      "requiredPermissions": ["view_appointments"],
+      "allowedRoles": ["admin", "doctor", "receptionist"]
+    },
+    "/schedule-appointment": {
+      "name": "Schedule Appointment",
+      "requiredPermissions": ["manage_appointments"],
+      "allowedRoles": ["admin", "doctor", "receptionist"]
+    },
+    "/medical-records": {
+      "name": "Medical Records",
+      "requiredPermissions": ["view_medical_records"],
+      "allowedRoles": ["admin", "doctor"]
+    },
+    "/add-medical-record": {
+      "name": "Add Medical Record",
+      "requiredPermissions": ["manage_medical_records"],
+      "allowedRoles": ["admin", "doctor"]
+    },
+    "/billing": {
+      "name": "Billing",
+      "requiredPermissions": ["view_billing"],
+      "allowedRoles": ["admin", "receptionist"]
+    },
+    "/create-invoice": {
+      "name": "Create Invoice",
+      "requiredPermissions": ["manage_billing"],
+      "allowedRoles": ["admin", "receptionist"]
+    },
+    "/reports": {
+      "name": "Reports",
+      "requiredPermissions": ["view_reports"],
+      "allowedRoles": ["admin", "doctor"]
+    },
+    "/profile": {
+      "name": "Profile",
+      "requiredPermissions": ["view_dashboard"],
+      "allowedRoles": ["admin", "doctor", "receptionist"]
+    },
+    "/settings": {
+      "name": "Settings",
+      "requiredPermissions": ["manage_settings"],
+      "allowedRoles": ["admin"]
+    },
+    "/login": {
+      "name": "Login",
+      "public": true
+    },
+    "/register": {
+      "name": "Register",
+      "public": true
+    }
+  },
+  "securityRules": {
+    "deleteOperations": {
+      "description": "All DELETE operations require admin role",
+      "enforcedBy": "authorize('admin')",
+      "affectedResources": ["patients", "appointments", "medical_records", "billing", "users"]
+    },
+    "medicalRecords": {
+      "description": "Medical records accessible only to admin and doctor roles",
+      "enforcedBy": "authorize('admin', 'doctor')",
+      "sensitivity": "high",
+      "complianceNote": "HIPAA-sensitive data"
+    },
+    "billing": {
+      "description": "Billing accessible to admin and receptionist roles",
+      "enforcedBy": "authorize('admin', 'receptionist')"
+    },
+    "adminRoutes": {
+      "description": "Admin routes for user and settings management",
+      "currentStatus": "⚠️ SECURITY RISK: Authentication temporarily disabled for development",
+      "requiredFix": "Re-enable authenticate + authorize('admin') middleware",
+      "affectedRoutes": ["/api/admin/users", "/api/admin/settings"]
+    }
+  },
+  "auditLog": {
+    "enabled": false,
+    "status": "⚠️ Logs table exists but not implemented in controllers",
+    "tableSchema": "logs (id, user_id, action, table_name, record_id, old_values, new_values, created_at)",
+    "requiredActions": [
+      "Implement audit logging in controllers",
+      "Log authentication attempts",
+      "Log permission denied events",
+      "Log data modifications (CREATE/UPDATE/DELETE)",
+      "Log administrative actions"
+    ]
+  },
+  "implementationStatus": {
+    "backend": {
+      "authMiddleware": "✅ Fully implemented (authenticate, authorize)",
+      "routeProtection": "⚠️ Partially implemented (inconsistent across routes)",
+      "adminRoutes": "❌ No authentication (CRITICAL SECURITY RISK)",
+      "validationMiddleware": "✅ Implemented with express-validator"
+    },
+    "frontend": {
+      "permissionConstants": "✅ Defined in constants.ts",
+      "routeGuards": "❌ Not implemented",
+      "componentLevelChecks": "❌ Not implemented",
+      "roleBasedUI": "⚠️ Partially implemented"
+    },
+    "database": {
+      "roleDefinition": "✅ ENUM('admin', 'doctor', 'receptionist') in users table",
+      "auditLogging": "❌ Table exists but not used",
+      "dataIntegrity": "✅ Foreign keys and constraints in place"
+    }
+  },
+  "nextSteps": [
+    {
+      "priority": "CRITICAL",
+      "task": "Re-enable authentication on admin routes",
+      "files": ["server/src/routes/adminRoutes.js"],
+      "action": "Add authenticate + authorize('admin') to all admin endpoints"
+    },
+    {
+      "priority": "HIGH",
+      "task": "Implement frontend route guards",
+      "files": ["client/src/components/Layout.tsx", "client/src/app/*/page.tsx"],
+      "action": "Create HOC or middleware to check ROLE_PERMISSIONS before rendering protected routes"
+    },
+    {
+      "priority": "HIGH",
+      "task": "Implement audit logging",
+      "files": ["server/src/utils/auditLog.js", "server/src/controllers/*.js"],
+      "action": "Create audit logger utility and integrate into all controllers"
+    },
+    {
+      "priority": "MEDIUM",
+      "task": "Review appointment permissions",
+      "files": ["server/src/routes/appointmentRoutes.js"],
+      "action": "Evaluate if all roles should manage appointments or restrict to specific roles"
+    },
+    {
+      "priority": "LOW",
+      "task": "Remove debug logging",
+      "files": ["server/src/middleware/validate.js"],
+      "action": "Remove temporary console.log statements after 400 error debugging complete"
+    }
+  ]
+}

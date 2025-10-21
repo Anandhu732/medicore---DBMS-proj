@@ -14,6 +14,9 @@ import { useToast } from '@/components/Toast';
 import { mockMedicalRecords, mockPatients, mockUsers } from '@/utils/mockData';
 import { MedicalRecord } from '@/utils/types';
 import { formatDate, formatDateTime } from '@/utils/helpers';
+import { can } from '@/utils/permissions';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { PERMISSIONS } from '@/utils/constants';
 
 export default function MedicalRecordsPage() {
   const router = useRouter();
@@ -39,14 +42,9 @@ export default function MedicalRecordsPage() {
       router.push('/login');
     } else {
       const parsedUser = JSON.parse(userData);
-      if (parsedUser.role === 'receptionist') {
-        showToast('Access denied: Receptionists cannot view medical records', 'error');
-        router.push('/dashboard');
-        return;
-      }
       setUser(parsedUser);
     }
-  }, [router, showToast]);
+  }, [router]);
 
   useEffect(() => {
     let filtered = records;
@@ -166,24 +164,27 @@ export default function MedicalRecordsPage() {
   ];
 
   return (
-    <Layout>
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
-            <p className="text-gray-600 mt-1">Manage patient medical history and records</p>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_MEDICAL_RECORDS]}>
+      <Layout>
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
+              <p className="text-gray-600 mt-1">Manage patient medical history and records</p>
+            </div>
+            {can.editMedicalRecords(user.role) && (
+              <Button
+                onClick={() => router.push('/add-medical-record')}
+                icon={
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                }
+              >
+                Add Record
+              </Button>
+            )}
           </div>
-          <Button
-            onClick={() => router.push('/add-medical-record')}
-            icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            }
-          >
-            Add Record
-          </Button>
-        </div>
 
         <Card>
           <Input
@@ -448,5 +449,6 @@ export default function MedicalRecordsPage() {
         </Modal>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }

@@ -15,6 +15,9 @@ import { api } from '@/utils/api';
 import { mockPatients, mockUsers } from '@/utils/mockData';
 import { Invoice } from '@/utils/types';
 import { formatDate, formatCurrency, getStatusColor } from '@/utils/helpers';
+import { can } from '@/utils/permissions';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { PERMISSIONS } from '@/utils/constants';
 
 export default function BillingPage() {
   const router = useRouter();
@@ -126,7 +129,7 @@ export default function BillingPage() {
 
     try {
       const balance = selectedInvoice.totalAmount - selectedInvoice.paidAmount;
-      
+
       await api.invoices.pay(selectedInvoice.id, {
         amount: balance,
         paymentMethod: 'Cash',
@@ -308,7 +311,7 @@ export default function BillingPage() {
           >
             View
           </button>
-          {row.status !== 'paid' && (
+          {can.manageBilling(user.role) && row.status !== 'paid' && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -333,25 +336,28 @@ export default function BillingPage() {
   const overdueCount = invoices.filter((inv) => inv.status === 'overdue').length;
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Billing & Invoices</h1>
-              <p className="text-gray-600 mt-1">Manage payments and financial records</p>
+    <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_BILLING]}>
+      <Layout>
+        <div className="min-h-screen bg-gray-50 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Billing & Invoices</h1>
+                <p className="text-gray-600 mt-1">Manage payments and financial records</p>
+              </div>
+              {can.manageBilling(user.role) && (
+                <Button
+                  onClick={handleCreateInvoice}
+                  icon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  }
+                >
+                  Create Invoice
+                </Button>
+              )}
             </div>
-            <Button
-              onClick={handleCreateInvoice}
-              icon={
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              }
-            >
-              Create Invoice
-            </Button>
-          </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -819,5 +825,6 @@ export default function BillingPage() {
         </div>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }

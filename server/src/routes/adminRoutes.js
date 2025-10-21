@@ -13,20 +13,19 @@ const router = express.Router();
  * Admin Routes - Direct database management
  * These routes provide CRUD access to all tables for the admin dashboard
  *
- * NOTE: Authentication temporarily disabled for development
- * TODO: Re-enable authentication in production
+ * ⚠️ SECURITY: All routes require admin authentication
  */
 
 // Get all records from a table
-router.get('/:table', getAllRecords);
+router.get('/:table', authenticate, authorize('admin'), getAllRecords);
 
 // Get single record by ID
-router.get('/:table/:id', getRecordById);
+router.get('/:table/:id', authenticate, authorize('admin'), getRecordById);
 
 // Update record
-router.put('/:table/:id', updateRecord);
+router.put('/:table/:id', authenticate, authorize('admin'), updateRecord);
 
 // Delete record
-router.delete('/:table/:id', deleteRecord);
+router.delete('/:table/:id', authenticate, authorize('admin'), deleteRecord);
 
 export default router;
