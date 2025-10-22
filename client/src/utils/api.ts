@@ -167,10 +167,10 @@ class ApiClient {
         // Try to parse JSON body first
         const parsed = await response.json();
         errorDetails = parsed;
-        
+
         // Handle validation errors (status 400 with errors array)
         if (parsed?.errors && Array.isArray(parsed.errors)) {
-          const validationMessages = parsed.errors.map((err: any) => 
+          const validationMessages = parsed.errors.map((err: any) =>
             `${err.field}: ${err.message}`
           ).join(', ');
           errorMessage = `Validation failed: ${validationMessages}`;
