@@ -257,11 +257,11 @@ export default function Home() {
                 </div>
                 <span className="text-xl font-bold">MediCore</span>
               </div>
-              <p className="text-gray-600">Modern hospital management system for healthcare professionals.</p>
+              <p className="text-white">Modern hospital management system for healthcare professionals.</p>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-600">
+              <ul className="space-y-2 text-white">
                 <li><a href="#features" className="hover:text-blue-600">Features</a></li>
                 <li><a href="#" className="hover:text-blue-600">Pricing</a></li>
                 <li><a href="#" className="hover:text-blue-600">Security</a></li>

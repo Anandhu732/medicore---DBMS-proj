@@ -48,7 +48,7 @@ CREATE TABLE `patients` (
   `gender` ENUM('Male', 'Female', 'Other') NOT NULL,
   `blood_group` VARCHAR(10) NOT NULL,
   `phone` VARCHAR(50) NOT NULL,
-  `email` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL UNIQUE,
   `address` TEXT NOT NULL,
   `emergency_contact` VARCHAR(255) NOT NULL,
   `medical_history` JSON NULL,

@@ -185,10 +185,22 @@ export const createPatient = async (req, res) => {
       return errorResponse(res, 'Patient with this email already exists', 409);
     }
 
-    // Generate patient ID
-    const countResult = await query('SELECT COUNT(*) as count FROM patients');
-    const count = countResult[0].count;
-    const patientId = `P${String(count + 1).padStart(3, '0')}`;
+    // Generate patient ID - Get the highest ID number to avoid duplicates
+    const maxIdResult = await query(
+      `SELECT id FROM patients
+       WHERE id REGEXP '^P[0-9]+$'
+       ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC
+       LIMIT 1`
+    );
+
+    let nextNumber = 1;
+    if (maxIdResult.length > 0) {
+      const lastId = maxIdResult[0].id;
+      const lastNumber = parseInt(lastId.substring(1));
+      nextNumber = lastNumber + 1;
+    }
+
+    const patientId = `P${String(nextNumber).padStart(3, '0')}`;
     console.log('Generated patient ID:', patientId);
 
     const registrationDate = getCurrentDateUTC();

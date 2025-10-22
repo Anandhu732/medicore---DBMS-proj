@@ -31,16 +31,16 @@ router.get('/:id', authenticate, getPatientById);
 
 // @route   POST /api/patients
 // @desc    Create new patient
-// @access  Private (Admin, Receptionist)
+// @access  Private (Admin, Doctor, Receptionist)
 router.post('/', [
   authenticate,
-  authorize('admin', 'receptionist'),
+  authorize('admin', 'doctor', 'receptionist'),
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('age').isInt({ min: 0, max: 150 }).withMessage('Valid age is required'),
   body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Valid gender is required'),
   body('bloodGroup').notEmpty().withMessage('Blood group is required'),
   body('phone').notEmpty().withMessage('Phone number is required'),
-  body('email').isEmail().withMessage('Valid email is required'),
+  body('email').isEmail({ allow_utf8_local_part: false }).withMessage('Valid email is required (e.g., user@example.com)'),
   body('address').trim().notEmpty().withMessage('Address is required'),
   body('emergencyContact').trim().notEmpty().withMessage('Emergency contact is required'),
   validate,
@@ -48,10 +48,10 @@ router.post('/', [
 
 // @route   PUT /api/patients/:id
 // @desc    Update patient
-// @access  Private (Admin, Receptionist)
+// @access  Private (Admin, Doctor, Receptionist)
 router.put('/:id', [
   authenticate,
-  authorize('admin', 'receptionist'),
+  authorize('admin', 'doctor', 'receptionist'),
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('age').isInt({ min: 0, max: 150 }).withMessage('Valid age is required'),
   body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Valid gender is required'),
