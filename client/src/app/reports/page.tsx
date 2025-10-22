@@ -7,10 +7,52 @@ import Card from '@/components/Card';
 import StatCard from '@/components/StatCard';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PERMISSIONS } from '@/utils/constants';
+import api from '@/utils/api';
+
+interface ReportStats {
+  overview: {
+    totalPatients: number;
+    activePatients: number;
+    totalDoctors: number;
+    totalRevenue: number;
+    systemUptime: string;
+  };
+  monthlyData: Array<{
+    month: string;
+    patients: number;
+    appointments: number;
+    revenue: number;
+    expenses: number;
+  }>;
+  departmentData: Array<{
+    name: string;
+    value: number;
+    count: number;
+    color: string;
+  }>;
+  patientTrend: Array<{
+    month: string;
+    patients: number;
+  }>;
+  revenueTrend: Array<{
+    month: string;
+    revenue: number;
+  }>;
+}
+
+interface SystemLog {
+  time: string;
+  event: string;
+  status: string;
+}
 
 export default function ReportsPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState<ReportStats | null>(null);
+  const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -21,44 +63,74 @@ export default function ReportsPage() {
     }
   }, [router]);
 
-  // Sample data for charts
-  const patientData = [
-    { month: 'Jan', patients: 120, appointments: 95 },
-    { month: 'Feb', patients: 150, appointments: 110 },
-    { month: 'Mar', patients: 180, appointments: 140 },
-    { month: 'Apr', patients: 200, appointments: 160 },
-    { month: 'May', patients: 220, appointments: 180 },
-    { month: 'Jun', patients: 250, appointments: 200 }
-  ];
+  useEffect(() => {
+    const loadReportsData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  const revenueData = [
-    { month: 'Jan', revenue: 45000, expenses: 30000 },
-    { month: 'Feb', revenue: 52000, expenses: 32000 },
-    { month: 'Mar', revenue: 48000, expenses: 35000 },
-    { month: 'Apr', revenue: 61000, expenses: 38000 },
-    { month: 'May', revenue: 55000, expenses: 40000 },
-    { month: 'Jun', revenue: 67000, expenses: 42000 }
-  ];
+        // Fetch reports stats
+        const statsData = await api.reports.getStats();
+        setStats(statsData);
 
-  const departmentData = [
-    { name: 'Cardiology', value: 35, color: '#3b82f6' },
-    { name: 'Neurology', value: 25, color: '#10b981' },
-    { name: 'Orthopedics', value: 20, color: '#f59e0b' },
-    { name: 'Pediatrics', value: 15, color: '#ef4444' },
-    { name: 'Emergency', value: 5, color: '#8b5cf6' }
-  ];
+        // Try to fetch logs (admin only)
+        try {
+          const logsData = await api.reports.getLogs();
+          setLogs(logsData);
+        } catch (logError) {
+          // Logs might not be accessible for non-admin users
+          console.log('Could not load system logs:', logError);
+        }
+      } catch (err: any) {
+        console.error('Failed to load reports:', err);
+        setError(err?.message || 'Failed to load reports data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const systemLogs = [
-    { time: '09:00', event: 'System backup completed', status: 'success' },
-    { time: '10:30', event: 'New patient registered', status: 'info' },
-    { time: '11:15', event: 'Database optimization', status: 'success' },
-    { time: '12:00', event: 'Security scan completed', status: 'success' },
-    { time: '14:30', event: 'System update available', status: 'warning' },
-    { time: '15:45', event: 'New appointment scheduled', status: 'info' }
-  ];
+    if (user) {
+      loadReportsData();
+    }
+  }, [user]);
 
   if (!user) {
     return <div>Loading...</div>;
+  }
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_REPORTS]}>
+        <Layout>
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading reports...</p>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (error) {
+    return (
+      <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_REPORTS]}>
+        <Layout>
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <p className="text-destructive text-lg">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
   }
 
   return (
@@ -74,8 +146,11 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Patients"
-            value="2,847"
-            trend={{ value: 12, isPositive: true }}
+            value={stats?.overview.totalPatients.toLocaleString() || '0'}
+            trend={{
+              value: stats?.overview.activePatients || 0,
+              isPositive: true
+            }}
             variant="accent"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,9 +159,12 @@ export default function ReportsPage() {
             }
           />
           <StatCard
-            title="Monthly Revenue"
-            value="$67,000"
-            trend={{ value: 8, isPositive: true }}
+            title="Total Revenue"
+            value={`$${stats?.overview.totalRevenue.toLocaleString() || '0'}`}
+            trend={{
+              value: stats?.monthlyData?.[0]?.revenue || 0,
+              isPositive: true
+            }}
             variant="success"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,8 +174,8 @@ export default function ReportsPage() {
           />
           <StatCard
             title="Active Doctors"
-            value="45"
-            trend={{ value: 3, isPositive: true }}
+            value={stats?.overview.totalDoctors.toString() || '0'}
+            trend={{ value: 0, isPositive: true }}
             variant="primary"
             icon={
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +185,7 @@ export default function ReportsPage() {
           />
           <StatCard
             title="System Uptime"
-            value="99.9%"
+            value={stats?.overview.systemUptime || '0%'}
             trend={{ value: 0.1, isPositive: true }}
             variant="warning"
             icon={
@@ -132,13 +210,21 @@ export default function ReportsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {patientData.map((item, index) => (
-                    <tr key={index} className="border-b border-border/50">
-                      <td className="py-3 px-4 text-muted-foreground">{item.month}</td>
-                      <td className="py-3 px-4 text-foreground font-medium">{item.patients}</td>
-                      <td className="py-3 px-4 text-foreground font-medium">{item.appointments}</td>
+                  {stats?.monthlyData && stats.monthlyData.length > 0 ? (
+                    stats.monthlyData.slice(0, 6).map((item, index) => (
+                      <tr key={index} className="border-b border-border/50">
+                        <td className="py-3 px-4 text-muted-foreground">{item.month}</td>
+                        <td className="py-3 px-4 text-foreground font-medium">{item.patients}</td>
+                        <td className="py-3 px-4 text-foreground font-medium">{item.appointments}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center text-muted-foreground">
+                        No data available
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -157,14 +243,22 @@ export default function ReportsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {revenueData.map((item, index) => (
-                    <tr key={index} className="border-b border-border/50">
-                      <td className="py-3 px-4 text-muted-foreground">{item.month}</td>
-                      <td className="py-3 px-4 text-success font-medium">${item.revenue.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-destructive font-medium">${item.expenses.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-foreground font-medium">${(item.revenue - item.expenses).toLocaleString()}</td>
+                  {stats?.monthlyData && stats.monthlyData.length > 0 ? (
+                    stats.monthlyData.slice(0, 6).map((item, index) => (
+                      <tr key={index} className="border-b border-border/50">
+                        <td className="py-3 px-4 text-muted-foreground">{item.month}</td>
+                        <td className="py-3 px-4 text-success font-medium">${item.revenue.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-destructive font-medium">${item.expenses.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-foreground font-medium">${(item.revenue - item.expenses).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-muted-foreground">
+                        No data available
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -176,40 +270,53 @@ export default function ReportsPage() {
           {/* Department Distribution */}
           <Card title="Department Distribution" variant="elevated">
             <div className="space-y-4">
-              {departmentData.map((dept, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: dept.color }}
-                    />
-                    <span className="font-medium text-foreground">{dept.name}</span>
+              {stats?.departmentData && stats.departmentData.length > 0 ? (
+                stats.departmentData.map((dept, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: dept.color }}
+                      />
+                      <span className="font-medium text-foreground">{dept.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-foreground">{dept.value}%</div>
+                      <div className="text-sm text-muted-foreground">{dept.count} doctors</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-foreground">{dept.value}%</div>
-                    <div className="text-sm text-muted-foreground">of total</div>
-                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-muted-foreground">
+                  No department data available
                 </div>
-              ))}
+              )}
             </div>
           </Card>
 
           {/* System Logs */}
           <Card title="System Logs" variant="elevated">
             <div className="space-y-4">
-              {systemLogs.map((log, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      log.status === 'success' ? 'bg-success' :
-                      log.status === 'warning' ? 'bg-warning' :
-                      'bg-primary'
-                    }`} />
-                    <span className="text-sm font-medium text-foreground">{log.event}</span>
+              {logs && logs.length > 0 ? (
+                logs.slice(0, 6).map((log, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${
+                        log.status === 'success' ? 'bg-success' :
+                        log.status === 'warning' ? 'bg-warning' :
+                        log.status === 'error' ? 'bg-destructive' :
+                        'bg-primary'
+                      }`} />
+                      <span className="text-sm font-medium text-foreground">{log.event}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{log.time}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{log.time}</span>
+                ))
+              ) : (
+                <div className="py-8 text-center text-muted-foreground">
+                  No system logs available
                 </div>
-              ))}
+              )}
             </div>
           </Card>
         </div>

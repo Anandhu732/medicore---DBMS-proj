@@ -84,10 +84,23 @@ export default function RegisterPage() {
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Registration error:', error);
-      setErrors({
-        general: error.message || 'Registration failed. Please try again.'
-      });
+        console.error('Registration error:', error);
+        // If backend attached details (from ApiClient), prefer that for more context
+        const backendDetail = error?.details;
+        let messageToShow = error.message || 'Registration failed. Please try again.';
+
+        if (backendDetail) {
+          // If details is an object, try to extract message or stringify
+          if (typeof backendDetail === 'object') {
+            messageToShow = backendDetail.message || backendDetail.error || JSON.stringify(backendDetail);
+          } else if (typeof backendDetail === 'string') {
+            messageToShow = backendDetail;
+          }
+        }
+
+        setErrors({
+          general: messageToShow
+        });
       setLoading(false);
     }
   };

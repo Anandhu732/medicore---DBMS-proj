@@ -17,38 +17,98 @@ export default function DashboardPage() {
   const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
   const [recentPatients, setRecentPatients] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (!userData) {
       router.push('/login');
-    } else {
-      setUser(JSON.parse(userData));
+      return;
+    }
+
+    setUser(JSON.parse(userData));
+  }, [router]);
+
+  useEffect(() => {
+    // Only load data once when user is available and data hasn't been loaded yet
+    if (user && !dataLoaded) {
       loadDashboardData();
     }
-  }, [router]);
+  }, [user, dataLoaded]);
 
   const loadDashboardData = async () => {
     try {
+      console.log('📊 [DASHBOARD] Loading dashboard data...');
       setIsLoading(true);
-      // Load real-time stats from API
-      const [statsData, appointmentsData, patientsData] = await Promise.all([
+      setError(null);
+
+      const today = new Date().toISOString().split('T')[0];
+
+      // Load real-time stats from API with individual error handling
+      const [statsResult, appointmentsResult, patientsResult] = await Promise.allSettled([
         api.dashboard.getStats(),
-        api.appointments.getAll({ date: new Date().toISOString().split('T')[0] }),
+        api.appointments.getAll({ date: today }),
         api.patients.getAll({ limit: 5, status: 'Active' })
       ]);
-      
-      setStats(statsData);
-      setTodayAppointments(appointmentsData);
-      setRecentPatients(patientsData);
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-      // Fallback to mock data on error
+
+      // Process stats
+      if (statsResult.status === 'fulfilled') {
+        console.log('✅ [DASHBOARD] Stats loaded:', statsResult.value);
+        setStats(statsResult.value);
+      } else {
+        console.error('❌ [DASHBOARD] Stats failed:', statsResult.reason);
+        setStats(mockDashboardStats);
+      }
+
+      // Process appointments
+      if (appointmentsResult.status === 'fulfilled') {
+        const appointments = Array.isArray(appointmentsResult.value) ? appointmentsResult.value : [];
+        console.log('✅ [DASHBOARD] Appointments loaded:', appointments.length);
+        setTodayAppointments(appointments);
+      } else {
+        console.error('❌ [DASHBOARD] Appointments failed:', appointmentsResult.reason);
+        setTodayAppointments(
+          mockAppointments.filter((apt) => apt.date === today).slice(0, 5)
+        );
+      }
+
+      // Process patients
+      if (patientsResult.status === 'fulfilled') {
+        const patients = Array.isArray(patientsResult.value) ? patientsResult.value : [];
+        console.log('✅ [DASHBOARD] Patients loaded:', patients.length);
+        setRecentPatients(patients);
+      } else {
+        console.error('❌ [DASHBOARD] Patients failed:', patientsResult.reason);
+        setRecentPatients(
+          mockPatients.filter((p) => p.status === 'Active').slice(0, 5)
+        );
+      }
+
+      setDataLoaded(true);
+      console.log('✅ [DASHBOARD] All data loaded successfully');
+
+    } catch (error: any) {
+      console.error('❌ [DASHBOARD] Critical error loading dashboard:', error);
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        status: error.status,
+        stack: error.stack
+      });
+
+      setError(error.message || 'Failed to load dashboard data');
+
+      // Fallback to mock data on critical error
       setStats(mockDashboardStats);
-      setTodayAppointments(mockAppointments.filter(
-        (apt) => apt.date === new Date().toISOString().split('T')[0]
-      ).slice(0, 5));
-      setRecentPatients(mockPatients.filter(p => p.status === 'Active').slice(0, 5));
+      const today = new Date().toISOString().split('T')[0];
+      setTodayAppointments(
+        mockAppointments.filter((apt) => apt.date === today).slice(0, 5)
+      );
+      setRecentPatients(
+        mockPatients.filter((p) => p.status === 'Active').slice(0, 5)
+      );
+      setDataLoaded(true);
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +119,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -116,6 +176,35 @@ export default function DashboardPage() {
   return (
     <Layout>
       <div className="space-y-8">
+        {/* Error Banner */}
+        {error && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  {error} - Showing cached data.
+                </p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => {
+                    setError(null);
+                    setDataLoaded(false);
+                  }}
+                  className="text-yellow-700 hover:text-yellow-900 text-sm font-medium"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-accent-50 to-primary-50 rounded-2xl p-8 border border-accent-200">
           <div className="flex items-center justify-between">

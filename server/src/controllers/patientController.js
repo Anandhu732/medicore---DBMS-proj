@@ -144,6 +144,11 @@ export const getPatientById = async (req, res) => {
  */
 export const createPatient = async (req, res) => {
   try {
+    // DEBUG: Log incoming request
+    console.log('📝 [CREATE PATIENT] Request received');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('User:', req.user?.email, 'Role:', req.user?.role);
+
     const {
       name,
       age,
@@ -156,6 +161,19 @@ export const createPatient = async (req, res) => {
       medicalHistory = [],
     } = req.body;
 
+    // DEBUG: Log extracted fields
+    console.log('Extracted fields:', {
+      name,
+      age,
+      gender,
+      bloodGroup,
+      phone,
+      email,
+      address: address?.substring(0, 50),
+      emergencyContact,
+      medicalHistoryLength: medicalHistory?.length
+    });
+
     // Check if patient with email already exists
     const existingPatients = await query(
       'SELECT id FROM patients WHERE email = ?',
@@ -163,6 +181,7 @@ export const createPatient = async (req, res) => {
     );
 
     if (existingPatients.length > 0) {
+      console.log('❌ Patient with email already exists:', email);
       return errorResponse(res, 'Patient with this email already exists', 409);
     }
 
@@ -170,6 +189,7 @@ export const createPatient = async (req, res) => {
     const countResult = await query('SELECT COUNT(*) as count FROM patients');
     const count = countResult[0].count;
     const patientId = `P${String(count + 1).padStart(3, '0')}`;
+    console.log('Generated patient ID:', patientId);
 
     const registrationDate = getCurrentDateUTC();
 
@@ -194,6 +214,8 @@ export const createPatient = async (req, res) => {
       ]
     );
 
+    console.log('✅ Patient created successfully:', patientId);
+
     // Fetch created patient
     const patients = await query('SELECT * FROM patients WHERE id = ?', [patientId]);
     const patient = patients[0];
@@ -204,8 +226,15 @@ export const createPatient = async (req, res) => {
     return successResponse(res, transformed, 'Patient created successfully', 201);
 
   } catch (error) {
-    console.error('Create patient error:', error);
-    return errorResponse(res, 'Failed to create patient', 500);
+    console.error('❌ [CREATE PATIENT] Error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlMessage: error.sqlMessage,
+      sql: error.sql
+    });
+    return errorResponse(res, error.sqlMessage || error.message || 'Failed to create patient', 500);
   }
 };
 

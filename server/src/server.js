@@ -17,6 +17,7 @@ import billingRoutes from './routes/billingRoutes.js';
 import medicalRecordRoutes from './routes/medicalRecordRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import reportsRoutes from './routes/reportsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,11 +47,19 @@ if (config.env === 'development') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
+// Rate limiting - more lenient for authenticated API calls
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+  max: 300, // Increased from 100 to 300 requests per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.',
+    retryAfter: 15 * 60, // seconds
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Skip rate limiting for health check
+  skip: (req) => req.path === '/api/health',
 });
 app.use('/api/', limiter);
 
@@ -79,6 +88,7 @@ app.use(`${config.apiBaseUrl}/appointments`, appointmentRoutes);
 app.use(`${config.apiBaseUrl}/invoices`, billingRoutes);
 app.use(`${config.apiBaseUrl}/medical-records`, medicalRecordRoutes);
 app.use(`${config.apiBaseUrl}/dashboard`, dashboardRoutes);
+app.use(`${config.apiBaseUrl}/reports`, reportsRoutes);
 app.use(`${config.apiBaseUrl}/admin`, adminRoutes);
 
 // ============================================

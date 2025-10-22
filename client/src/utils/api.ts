@@ -54,6 +54,12 @@ export const API_ENDPOINTS = {
     STATS: '/dashboard/stats',
     RECENT_ACTIVITIES: '/dashboard/activities',
   },
+
+  // Reports
+  REPORTS: {
+    STATS: '/reports/stats',
+    LOGS: '/reports/logs',
+  },
 };
 
 /**
@@ -65,9 +71,54 @@ interface RequestOptions extends RequestInit {
 
 class ApiClient {
   private baseUrl: string;
+  private retryAttempts: number = 3;
+  private retryDelay: number = 1000; // 1 second
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Sleep for a specified duration
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Retry a request with exponential backoff
+   */
+  private async retryRequest<T>(
+    fn: () => Promise<Response>,
+    attempt: number = 0
+  ): Promise<Response> {
+    try {
+      const response = await fn();
+
+      // If rate limited (429), retry with exponential backoff
+      if (response.status === 429 && attempt < this.retryAttempts) {
+        const retryAfter = parseInt(response.headers.get('retry-after') || '0');
+        const delay = retryAfter > 0 ? retryAfter * 1000 : this.retryDelay * Math.pow(2, attempt);
+
+        console.warn(`Rate limited. Retrying in ${delay}ms (attempt ${attempt + 1}/${this.retryAttempts})`);
+        await this.sleep(delay);
+
+        return this.retryRequest(fn, attempt + 1);
+      }
+
+      return response;
+    } catch (error) {
+      // Network errors - retry with backoff
+      if (attempt < this.retryAttempts) {
+        const delay = this.retryDelay * Math.pow(2, attempt);
+        console.warn(`Network error. Retrying in ${delay}ms (attempt ${attempt + 1}/${this.retryAttempts})`);
+        await this.sleep(delay);
+
+        return this.retryRequest(fn, attempt + 1);
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -109,16 +160,26 @@ class ApiClient {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let errorMessage = response.statusText;
-      let errorDetails = null;
+      let errorMessage: string = response.statusText;
+      let errorDetails: any = null;
 
       try {
-        const error = await response.json();
-        errorMessage = error.message || error.error || response.statusText;
-        errorDetails = error;
+        // Try to parse JSON body first
+        const parsed = await response.json();
+        errorDetails = parsed;
+        errorMessage = parsed?.message || parsed?.error || response.statusText;
       } catch {
-        // If JSON parsing fails, use status text
-        errorMessage = response.statusText;
+        // If not JSON, try to read as text
+        try {
+          const text = await response.text();
+          if (text) {
+            errorDetails = text;
+            errorMessage = text;
+          }
+        } catch {
+          // Body already consumed or not readable, use statusText
+          errorMessage = response.statusText;
+        }
       }
 
       // Log detailed error information for debugging
@@ -130,7 +191,11 @@ class ApiClient {
         details: errorDetails
       });
 
-      throw new Error(errorMessage);
+      // Attach details to the Error object for callers to inspect
+      const err: any = new Error(errorMessage || response.statusText);
+      err.details = errorDetails;
+      err.status = response.status;
+      throw err;
     }
 
     const result = await response.json();
@@ -147,11 +212,13 @@ class ApiClient {
    * GET request
    */
   async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'GET',
-      headers: this.buildHeaders(options),
-      ...options,
-    });
+    const response = await this.retryRequest(
+      () => fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'GET',
+        headers: this.buildHeaders(options),
+        ...options,
+      })
+    );
 
     return this.handleResponse<T>(response);
   }
@@ -311,6 +378,14 @@ export const api = {
       apiClient.get(API_ENDPOINTS.DASHBOARD.STATS),
     getActivities: () =>
       apiClient.get(API_ENDPOINTS.DASHBOARD.RECENT_ACTIVITIES),
+  },
+
+  // Reports
+  reports: {
+    getStats: () =>
+      apiClient.get(API_ENDPOINTS.REPORTS.STATS),
+    getLogs: () =>
+      apiClient.get(API_ENDPOINTS.REPORTS.LOGS),
   },
 
   // Admin/Users

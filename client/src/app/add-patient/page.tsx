@@ -127,14 +127,43 @@ export default function AddPatientPage() {
         medicalHistory: medicalHistory,
       };
 
+      console.log('📤 [ADD PATIENT] Sending request with data:', patientData);
+
       // Call the actual API
       const response = await api.patients.create(patientData);
 
+      console.log('✅ [ADD PATIENT] Success:', response);
       showToast('Patient added successfully!', 'success');
       router.push('/patients');
     } catch (error: any) {
-      console.error('Failed to add patient:', error);
-      showToast(error.message || 'Failed to add patient', 'error');
+      console.error('❌ [ADD PATIENT] Error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        status: error.status,
+        stack: error.stack
+      });
+
+      // Display more specific error message
+      let errorMessage = 'Failed to add patient';
+
+      if (error.details) {
+        if (typeof error.details === 'string') {
+          errorMessage = error.details;
+        } else if (error.details.message) {
+          errorMessage = error.details.message;
+        } else if (error.details.errors && Array.isArray(error.details.errors)) {
+          // Validation errors
+          const validationErrors = error.details.errors.map((e: any) =>
+            `${e.field}: ${e.message}`
+          ).join(', ');
+          errorMessage = `Validation failed: ${validationErrors}`;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }

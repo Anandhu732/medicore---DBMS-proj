@@ -131,18 +131,46 @@ export const createInvoice = async (req, res) => {
   try {
     const {
       patientId,
-      date,
+      date = new Date().toISOString().split('T')[0],
       dueDate,
       items = [],
+      notes = '',
     } = req.body;
 
-    // Calculate totals
-    const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.total), 0);
+    // Validate required fields
+    if (!patientId) {
+      return errorResponse(res, 'Patient ID is required', 400);
+    }
+    if (!dueDate) {
+      return errorResponse(res, 'Due date is required', 400);
+    }
+    if (!items || items.length === 0) {
+      return errorResponse(res, 'At least one invoice item is required', 400);
+    }
 
+    // Calculate item totals and grand total
+    const processedItems = items.map(item => {
+      const quantity = parseFloat(item.quantity) || 1;
+      const price = parseFloat(item.price) || 0;
+      const total = quantity * price;
+
+      return {
+        description: item.description,
+        category: item.category || 'General',
+        quantity,
+        price,
+        total
+      };
+    });
+
+    const totalAmount = processedItems.reduce((sum, item) => sum + item.total, 0);
+
+    // Generate invoice ID
     const countResult = await query('SELECT COUNT(*) as count FROM invoices');
     const count = countResult[0].count;
     const invoiceId = `INV${String(count + 1).padStart(3, '0')}`;
 
+    // Insert invoice
     await query(
       `INSERT INTO invoices (id, patient_id, date, due_date, total_amount, paid_amount, status)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -150,7 +178,7 @@ export const createInvoice = async (req, res) => {
     );
 
     // Insert invoice items
-    for (const item of items) {
+    for (const item of processedItems) {
       const itemCountResult = await query('SELECT COUNT(*) as count FROM invoice_items');
       const itemCount = itemCountResult[0].count;
       const itemId = `ITEM${String(itemCount + 1).padStart(3, '0')}`;
@@ -158,11 +186,11 @@ export const createInvoice = async (req, res) => {
       await query(
         `INSERT INTO invoice_items (id, invoice_id, description, category, quantity, price, total)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [itemId, invoiceId, item.description, item.category || 'General', item.quantity, item.price, item.total]
+        [itemId, invoiceId, item.description, item.category, item.quantity, item.price, item.total]
       );
     }
 
-    // Fetch created invoice
+    // Fetch created invoice with patient info
     const invoices = await query(
       `SELECT i.*, p.name as patient_name
        FROM invoices i
@@ -182,7 +210,13 @@ export const createInvoice = async (req, res) => {
 
   } catch (error) {
     console.error('Create invoice error:', error);
-    return errorResponse(res, 'Failed to create invoice', 500);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlMessage: error.sqlMessage
+    });
+    return errorResponse(res, error.sqlMessage || error.message || 'Failed to create invoice', 500);
   }
 };
 
