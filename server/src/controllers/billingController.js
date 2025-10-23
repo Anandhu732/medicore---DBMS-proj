@@ -225,9 +225,18 @@ export const recordPayment = async (req, res) => {
     const { id } = req.params;
     const { amount, paymentMethod = 'Cash' } = req.body;
 
+    console.log('Recording payment for invoice:', id, { amount, paymentMethod });
+
+    // Validate amount
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+      console.error('Invalid amount:', amount);
+      return errorResponse(res, 'Invalid payment amount', 400);
+    }
+
     const invoices = await query('SELECT * FROM invoices WHERE id = ?', [id]);
 
     if (invoices.length === 0) {
+      console.error('Invoice not found:', id);
       return errorResponse(res, 'Invoice not found', 404);
     }
 
@@ -235,6 +244,14 @@ export const recordPayment = async (req, res) => {
     const newPaidAmount = parseFloat(invoice.paid_amount) + parseFloat(amount);
     const newStatus = newPaidAmount >= parseFloat(invoice.total_amount) ? 'paid' : 'pending';
     const paidAt = newStatus === 'paid' ? new Date().toISOString() : null;
+
+    console.log('Updating invoice:', {
+      id,
+      currentPaid: invoice.paid_amount,
+      paymentAmount: amount,
+      newPaidAmount,
+      newStatus
+    });
 
     await query(
       `UPDATE invoices
@@ -261,10 +278,12 @@ export const recordPayment = async (req, res) => {
       transformed.paidAt = paidAt;
     }
 
+    console.log('Payment recorded successfully for invoice:', id);
     return successResponse(res, transformed, 'Payment recorded successfully');
 
   } catch (error) {
     console.error('Record payment error:', error);
+    console.error('Error stack:', error.stack);
     return errorResponse(res, 'Failed to record payment', 500);
   }
 };

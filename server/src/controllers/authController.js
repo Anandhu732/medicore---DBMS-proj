@@ -4,6 +4,7 @@ import { query } from '../config/database.js';
 import config from '../config/config.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { toCamelCase } from '../utils/datetime.js';
+import notificationService from '../services/notificationService.js';
 
 /**
  * Authentication Controller
@@ -59,6 +60,12 @@ export const login = async (req, res) => {
 
     // Transform to camelCase for frontend
     const userData = toCamelCase(user);
+
+    // Send login notification (async, don't wait)
+    notificationService.notifyLogin(user, req).catch(err => {
+      console.error('Login notification failed:', err);
+      // Don't fail login if notification fails
+    });
 
     return successResponse(res, {
       user: userData,

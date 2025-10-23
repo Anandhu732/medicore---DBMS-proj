@@ -231,7 +231,7 @@ export default function MedicalRecordsPage() {
   return (
     <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_MEDICAL_RECORDS]}>
       <Layout>
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>

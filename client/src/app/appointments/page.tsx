@@ -6,17 +6,15 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import Card from '@/components/Card';
 import Table from '@/components/Table';
-import Modal from '@/components/Modal';
+import AppointmentEditor from '@/components/AppointmentEditor';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Select from '@/components/Select';
-import Textarea from '@/components/Textarea';
 import { useToast } from '@/components/Toast';
 import { api } from '@/utils/api';
-import { mockPatients, mockUsers } from '@/utils/mockData';
-import { APPOINTMENT_STATUS, DEPARTMENTS } from '@/utils/constants';
+// form helper data moved into AppointmentEditor; appointments page focuses on listing
 import { Appointment } from '@/utils/types';
-import { getStatusColor, formatDate, checkTimeConflict } from '@/utils/helpers';
+import { getStatusColor, formatDate } from '@/utils/helpers';
 
 interface User {
   role: string;
@@ -36,59 +34,23 @@ export default function AppointmentsPage() {
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    patientId: '',
-    doctorId: '',
-    date: '',
-    time: '',
-    duration: '30',
-    reason: '',
-    notes: '',
-  });
-  const [availablePatients, setAvailablePatients] = useState<any[]>([]);
-  const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (!userData) {
       router.push('/login');
-    } else {
-      setUser(JSON.parse(userData));
-      loadAppointments();
-      loadPatients();
-      loadDoctors();
+      return;
     }
-  }, [router]);
+    setUser(JSON.parse(userData));
+    loadAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Load patients for appointment form
-  const loadPatients = async () => {
-    try {
-      const patientsData: any = await api.patients.getAll();
-      setAvailablePatients(patientsData.filter((p: any) => p.status === 'Active'));
-    } catch (error: any) {
-      console.error('Failed to load patients:', error);
-      showToast('Failed to load patients for appointment', 'error');
-    }
-  };
-
-  // Load doctors for appointment form
-  const loadDoctors = async () => {
-    try {
-      // For now, we'll use mock data for doctors since there's no doctors API endpoint
-      // In a real app, you'd have an API endpoint for users with role 'doctor'
-      const doctors = mockUsers.filter(u => u.role === 'doctor');
-      setAvailableDoctors(doctors);
-    } catch (error: any) {
-      console.error('Failed to load doctors:', error);
-      showToast('Failed to load doctors for appointment', 'error');
-    }
-  };
+  // Patient/doctor lists are handled inside AppointmentEditor when editing/creating
 
   // Load appointments from backend
   const loadAppointments = async () => {
     try {
-      setIsLoading(true);
       const appointmentsData: any = await api.appointments.getAll();
       setAppointments(appointmentsData);
       setFilteredAppointments(appointmentsData);
@@ -98,8 +60,6 @@ export default function AppointmentsPage() {
       // Fallback to empty array on error
       setAppointments([]);
       setFilteredAppointments([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -128,113 +88,19 @@ export default function AppointmentsPage() {
 
   const handleAddAppointment = () => {
     setModalMode('add');
-    setFormData({
-      patientId: '',
-      doctorId: '',
-      date: '',
-      time: '',
-      duration: '30',
-      reason: '',
-      notes: '',
-    });
+    setSelectedAppointment(null);
     setIsModalOpen(true);
   };
 
   const handleEditAppointment = (appointment: Appointment) => {
     setModalMode('edit');
     setSelectedAppointment(appointment);
-    setFormData({
-      patientId: appointment.patientId,
-      doctorId: appointment.doctorId,
-      date: appointment.date,
-      time: appointment.time,
-      duration: appointment.duration.toString(),
-      reason: appointment.reason,
-      notes: appointment.notes || '',
-    });
     setIsModalOpen(true);
   };
 
-  const checkForConflicts = (date: string, time: string, duration: number, excludeId?: string): boolean => {
-    const endTime = new Date(`2000-01-01T${time}`);
-    endTime.setMinutes(endTime.getMinutes() + duration);
-    const endTimeStr = endTime.toTimeString().slice(0, 5);
+  // Time conflict checking handled by server/editor as needed
 
-    const conflicts = appointments.filter(apt => {
-      if (apt.id === excludeId) return false;
-      if (apt.date !== date) return false;
-      if (apt.status === 'Cancelled') return false;
-
-      const aptEndTime = new Date(`2000-01-01T${apt.time}`);
-      aptEndTime.setMinutes(aptEndTime.getMinutes() + apt.duration);
-      const aptEndTimeStr = aptEndTime.toTimeString().slice(0, 5);
-
-      return checkTimeConflict(time, endTimeStr, apt.time, aptEndTimeStr);
-    });
-
-    if (conflicts.length > 0) {
-      showToast(`Time conflict detected with appointment at ${conflicts[0].time}`, 'warning');
-      return true;
-    }
-    return false;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Validate required fields
-      if (!formData.patientId) {
-        showToast('Please select a patient', 'error');
-        return;
-      }
-      if (!formData.doctorId) {
-        showToast('Please select a doctor', 'error');
-        return;
-      }
-      if (!formData.date) {
-        showToast('Please select a date', 'error');
-        return;
-      }
-      if (!formData.time) {
-        showToast('Please select a time', 'error');
-        return;
-      }
-      if (!formData.reason.trim()) {
-        showToast('Please enter a reason for the appointment', 'error');
-        return;
-      }
-
-      const duration = parseInt(formData.duration);
-
-      const appointmentData = {
-        patientId: formData.patientId,
-        doctorId: formData.doctorId,
-        date: formData.date,
-        time: formData.time,
-        duration: duration,
-        reason: formData.reason.trim(),
-        notes: formData.notes.trim(),
-      };
-
-      if (modalMode === 'add') {
-        await api.appointments.create(appointmentData);
-        showToast('Appointment scheduled successfully', 'success');
-      } else {
-        await api.appointments.update(selectedAppointment!.id, appointmentData);
-        showToast('Appointment updated successfully', 'success');
-      }
-
-      setIsModalOpen(false);
-      loadAppointments(); // Reload appointments from database
-    } catch (error: any) {
-      console.error('Submit error:', error);
-      showToast(error.message || 'Failed to save appointment', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // submission handled by AppointmentEditor
 
   const handleStatusChange = async (appointment: Appointment, newStatus: string) => {
     try {
@@ -342,7 +208,7 @@ export default function AppointmentsPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen p-6" style={{ backgroundColor: '#ffffff' }}>
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -382,6 +248,13 @@ export default function AppointmentsPage() {
                 </svg>
               }>
                 Schedule Appointment
+              </Button>
+              <Button onClick={handleAddAppointment} variant="primary" icon={
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              }>
+                Quick Add
               </Button>
             </div>
           </div>
@@ -450,117 +323,14 @@ export default function AppointmentsPage() {
             </Card>
           )}
 
-        <Modal
+        {/* Appointment editor modal (reusable) */}
+        <AppointmentEditor
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={modalMode === 'add' ? 'Schedule New Appointment' : 'Edit Appointment'}
-          size="lg"
-          footer={
-            <>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" form="appointment-form">
-                {modalMode === 'add' ? 'Schedule' : 'Update'}
-              </Button>
-            </>
-          }
-        >
-          <form id="appointment-form" onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="Patient"
-                value={formData.patientId}
-                onChange={(value) => setFormData({ ...formData, patientId: value })}
-                options={[
-                  { value: '', label: 'Select Patient' },
-                  ...availablePatients.map(p => ({
-                    value: p.id,
-                    label: `${p.name} (${p.id})`
-                  }))
-                ]}
-                required
-              />
-              <Select
-                label="Doctor"
-                value={formData.doctorId}
-                onChange={(value) => setFormData({ ...formData, doctorId: value })}
-                options={[
-                  { value: '', label: 'Select Doctor' },
-                  ...availableDoctors.map(d => ({
-                    value: d.id,
-                    label: `${d.name} - ${d.department || 'General Medicine'}`
-                  }))
-                ]}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <Input
-                label="Date"
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                required
-                min={new Date().toISOString().split('T')[0]}
-              />
-              <Input
-                label="Time"
-                type="time"
-                value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                required
-              />
-              <Select
-                label="Duration"
-                value={formData.duration}
-                onChange={(value) => setFormData({ ...formData, duration: value })}
-                options={[
-                  { value: '15', label: '15 minutes' },
-                  { value: '30', label: '30 minutes' },
-                  { value: '45', label: '45 minutes' },
-                  { value: '60', label: '1 hour' },
-                  { value: '90', label: '1.5 hours' },
-                  { value: '120', label: '2 hours' },
-                ]}
-              />
-            </div>
-
-            <Input
-              label="Reason for Visit"
-              type="text"
-              value={formData.reason}
-              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              placeholder="e.g., Routine checkup, Follow-up consultation, Annual physical"
-              required
-            />
-
-            <Textarea
-              label="Notes (Optional)"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes or special requirements (e.g., need wheelchair access, interpreter needed)"
-              rows={3}
-            />
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <p className="text-xs font-semibold text-gray-900 mb-1">Appointment Tips:</p>
-                  <ul className="text-xs text-gray-600 space-y-0.5">
-                    <li>• System will check for time conflicts automatically</li>
-                    <li>• Appointments cannot be scheduled in the past</li>
-                    <li>• Patient and doctor will receive confirmation notifications</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </form>
-          </Modal>
+          onClose={() => { setIsModalOpen(false); setSelectedAppointment(null); }}
+          mode={modalMode}
+          appointment={selectedAppointment}
+          onSaved={() => loadAppointments()}
+        />
         </div>
       </div>
     </Layout>

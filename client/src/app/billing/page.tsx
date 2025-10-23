@@ -130,17 +130,47 @@ export default function BillingPage() {
     try {
       const balance = selectedInvoice.totalAmount - selectedInvoice.paidAmount;
 
-      await api.invoices.pay(selectedInvoice.id, {
+      // Ensure amount is a valid positive number
+      if (balance <= 0) {
+        showToast('No outstanding balance to pay', 'error');
+        return;
+      }
+
+      console.log('Recording payment for invoice:', selectedInvoice.id, {
         amount: balance,
         paymentMethod: 'Cash',
       });
 
+      const result = await api.invoices.pay(selectedInvoice.id, {
+        amount: Number(balance.toFixed(2)), // Ensure proper number format
+        paymentMethod: 'Cash',
+      });
+
+      console.log('Payment result:', result);
       showToast('Payment recorded successfully', 'success');
       setIsPaymentModalOpen(false);
       loadInvoices(); // Reload invoices from database
     } catch (error: any) {
-      console.error('Payment error:', error);
-      showToast(error.message || 'Failed to record payment', 'error');
+      console.error('Payment error details:', {
+        message: error.message,
+        details: error.details,
+        status: error.status,
+        error: error
+      });
+
+      // Show more specific error messages
+      let errorMessage = 'Failed to record payment';
+      if (error.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.status === 403) {
+        errorMessage = 'You do not have permission to record payments.';
+      } else if (error.status === 404) {
+        errorMessage = 'Invoice not found.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -338,8 +368,8 @@ export default function BillingPage() {
   return (
     <ProtectedRoute requiredPermissions={[PERMISSIONS.VIEW_BILLING]}>
       <Layout>
-        <div className="min-h-screen bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <div className="min-h-screen p-6" style={{ backgroundColor: '#f9fafb' }}>
+          <div className="max-w-7xl mx-auto space-y-6" style={{ backgroundColor: 'transparent' }}>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Billing & Invoices</h1>

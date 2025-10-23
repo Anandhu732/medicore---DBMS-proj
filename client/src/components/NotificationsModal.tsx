@@ -72,13 +72,14 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, onClose
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      // Don't prevent scrolling on the background page
+      // document.body.style.overflow = 'hidden'; // REMOVED
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      // document.body.style.overflow = 'unset'; // REMOVED
     };
   }, [isOpen, onClose]);
 
@@ -127,33 +128,35 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-          aria-hidden="true"
+    <div
+      ref={modalRef}
+      className={`fixed top-20 right-4 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden transition-all duration-300 ease-out transform ${
+        isOpen ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'
+      }`}
+      style={{
+        maxHeight: 'calc(100vh - 6rem)',
+        pointerEvents: 'auto',
+      }}
+      aria-labelledby="notifications-title"
+      role="dialog"
+      aria-modal="false"
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 bg-blue-600 rounded-full"></div>
+          <h3 id="notifications-title" className="text-lg font-bold text-foreground">Notifications</h3>
+        </div>
+        <button
           onClick={onClose}
-        />
-        
-        {/* Modal */}
-        <div
-          ref={modalRef}
-          className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-md sm:align-middle"
+          className="text-muted-foreground hover:text-foreground hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-2 transition-all"
+          aria-label="Close notifications"
         >
-          {/* Header */}
-          <div className="bg-white px-6 py-4 border-b border-border flex items-center justify-between">
-            <h3 className="text-lg font-bold text-foreground">Notifications</h3>
-            <button
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-2 transition-colors"
-              aria-label="Close notifications"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
           {/* Notifications List */}
           <div className="bg-white max-h-96 overflow-y-auto">
@@ -201,7 +204,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, onClose
           </div>
 
           {/* Footer */}
-          <div className="bg-muted px-6 py-4 border-t border-border">
+          <div className="bg-muted px-6 py-4 border-t border-border sticky bottom-0">
             <div className="flex items-center justify-between">
               <button
                 onClick={() => router.push('/settings')}
@@ -220,8 +223,6 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, onClose
               </button>
             </div>
           </div>
-        </div>
-      </div>
     </div>
   );
 };

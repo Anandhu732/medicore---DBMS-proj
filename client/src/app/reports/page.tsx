@@ -275,8 +275,8 @@ export default function ReportsPage() {
                   <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: dept.color }}
+                        className="w-4 h-4 rounded-full dept-color"
+                        style={{ ['--dept-color' as any]: dept.color }}
                       />
                       <span className="font-medium text-foreground">{dept.name}</span>
                     </div>

@@ -198,6 +198,17 @@ p {
   }
 }
 
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -233,6 +244,10 @@ p {
 
 .animate-slide-in-left {
   animation: slide-in-left 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
 }
 
 .animate-fade-in {
@@ -327,8 +342,7 @@ table {
 
 /* Modal Backdrop */
 .modal-backdrop {
-  backdrop-filter: blur(4px);
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Loading Spinner */
@@ -758,4 +772,10 @@ table {
 .tooltip:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
+}
+
+/* Department color utility (uses CSS variable --dept-color) */
+.dept-color {
+  background-color: var(--dept-color, var(--color-primary));
+  border: 1px solid rgba(0,0,0,0.04);
 }

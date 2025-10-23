@@ -33,7 +33,9 @@
     "morgan": "^1.10.0",
     "moment-timezone": "^0.5.43",
     "uuid": "^9.0.1",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "nodemailer": "^6.9.7",
+    "libphonenumber-js": "^1.10.51"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

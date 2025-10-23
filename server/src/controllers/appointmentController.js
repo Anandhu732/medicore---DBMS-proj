@@ -156,9 +156,22 @@ export const createAppointment = async (req, res) => {
     const doctors = await query('SELECT department FROM users WHERE id = ?', [doctorId]);
     const department = doctors[0]?.department || 'General';
 
-    const countResult = await query('SELECT COUNT(*) as count FROM appointments');
-    const count = countResult[0].count;
-    const appointmentId = `A${String(count + 1).padStart(3, '0')}`;
+    // Generate appointment ID by finding the max existing ID
+    const maxIdResult = await query(
+      `SELECT id FROM appointments 
+       WHERE id REGEXP '^A[0-9]+$' 
+       ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC 
+       LIMIT 1`
+    );
+    
+    let nextNumber = 1;
+    if (maxIdResult.length > 0) {
+      const maxId = maxIdResult[0].id;
+      const currentNumber = parseInt(maxId.substring(1));
+      nextNumber = currentNumber + 1;
+    }
+    
+    const appointmentId = `A${String(nextNumber).padStart(3, '0')}`;
 
     await query(
       `INSERT INTO appointments (id, patient_id, doctor_id, department, date, time, duration, status, reason, notes)

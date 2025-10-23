@@ -43,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ backgroundColor: '#ffffff' }}>
       <Sidebar userRole={user.role} />
       <Header userName={user.name} userRole={user.role} />
       <main className="ml-64 pt-16">

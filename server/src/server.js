@@ -18,6 +18,7 @@ import medicalRecordRoutes from './routes/medicalRecordRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
+import verificationRoutes from './routes/verificationRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,6 +91,7 @@ app.use(`${config.apiBaseUrl}/medical-records`, medicalRecordRoutes);
 app.use(`${config.apiBaseUrl}/dashboard`, dashboardRoutes);
 app.use(`${config.apiBaseUrl}/reports`, reportsRoutes);
 app.use(`${config.apiBaseUrl}/admin`, adminRoutes);
+app.use(`${config.apiBaseUrl}/verification`, verificationRoutes);
 
 // ============================================
 // Admin Dashboard Routes

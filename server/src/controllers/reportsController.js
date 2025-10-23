@@ -141,7 +141,10 @@ export const getSystemLogs = async (req, res) => {
       [parseInt(limit)]
     );
 
-    const formattedLogs = logs.map(log => ({
+      // If logs table is missing or returns undefined, gracefully return empty array
+      const logsSafe = Array.isArray(logs) ? logs : [];
+
+      const formattedLogs = logsSafe.map(log => ({
       time: new Date(log.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       event: log.action,
       user: log.user_id,

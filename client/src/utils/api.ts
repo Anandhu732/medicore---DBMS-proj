@@ -31,8 +31,9 @@ export const API_ENDPOINTS = {
   APPOINTMENTS: {
     BASE: '/appointments',
     BY_ID: (id: string) => `/appointments/${id}`,
-    CANCEL: (id: string) => `/appointments/${id}/cancel`,
-    COMPLETE: (id: string) => `/appointments/${id}/complete`,
+    // Use the unified status endpoint
+    CANCEL: (id: string) => `/appointments/${id}/status`,
+    COMPLETE: (id: string) => `/appointments/${id}/status`,
   },
 
   // Medical Records
@@ -46,7 +47,7 @@ export const API_ENDPOINTS = {
   INVOICES: {
     BASE: '/invoices',
     BY_ID: (id: string) => `/invoices/${id}`,
-    PAY: (id: string) => `/invoices/${id}/pay`,
+    PAY: (id: string) => `/invoices/${id}/payment`,
   },
 
   // Dashboard
@@ -88,7 +89,7 @@ class ApiClient {
   /**
    * Retry a request with exponential backoff
    */
-  private async retryRequest<T>(
+  private async retryRequest(
     fn: () => Promise<Response>,
     attempt: number = 0
   ): Promise<Response> {
@@ -347,10 +348,12 @@ export const api = {
       apiClient.post(API_ENDPOINTS.APPOINTMENTS.BASE, data),
     update: (id: string, data: any) =>
       apiClient.put(API_ENDPOINTS.APPOINTMENTS.BY_ID(id), data),
+    // The backend exposes a single status endpoint: PATCH /api/appointments/:id/status
+    // Update status by calling that endpoint with a body { status: 'Cancelled'|'Completed' }
     cancel: (id: string) =>
-      apiClient.patch(API_ENDPOINTS.APPOINTMENTS.CANCEL(id)),
+      apiClient.patch(API_ENDPOINTS.APPOINTMENTS.BY_ID(id) + '/status', { status: 'Cancelled' }),
     complete: (id: string) =>
-      apiClient.patch(API_ENDPOINTS.APPOINTMENTS.COMPLETE(id)),
+      apiClient.patch(API_ENDPOINTS.APPOINTMENTS.BY_ID(id) + '/status', { status: 'Completed' }),
   },
 
   // Medical Records

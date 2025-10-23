@@ -140,7 +140,7 @@ export default function ScheduleAppointmentPage() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 p-6" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -292,7 +292,7 @@ export default function ScheduleAppointmentPage() {
         </Card>
 
         {/* Quick Tips */}
-        <Card title="Quick Tips" variant="outline">
+        <Card title="Quick Tips" variant="outlined">
           <div className="space-y-3 text-sm text-gray-600">
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
